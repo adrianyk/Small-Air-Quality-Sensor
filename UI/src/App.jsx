@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import Dropdown from './components/Dropdown';
 
 function App() {
   const [selectedLocation, setSelectedLocation] = useState('indoors');
@@ -13,14 +14,7 @@ function App() {
       <h1>Air Quality Dashboard</h1>
 
       {/* Dropdown */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label htmlFor="location-select">Select Location: </label>
-        <select id="location-select" value={selectedLocation} onChange={handleLocationChange}>
-          <option value="indoors">Indoors</option>
-          <option value="outdoors">Outdoors</option>
-          <option value="in-vehicle">In Vehicle</option>
-        </select>
-      </div>
+      <Dropdown selected={selectedLocation} onChange={handleLocationChange} />
 
       {/* Placeholder chart */}
       <div
