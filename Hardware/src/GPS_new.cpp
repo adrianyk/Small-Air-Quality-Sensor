@@ -1,5 +1,9 @@
 #include <Adafruit_GPS.h>
 #include <HardwareSerial.h>
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
 
 
 /*remember to include:
@@ -7,6 +11,23 @@
     adafruit/Adafruit GPS Library
   in platformio.ini
 */
+//BLE Setup
+BLEServer* pServer = nullptr;
+BLECharacteristic* pCharacteristic = nullptr;
+bool deviceConnected = false;
+//BLE Callback
+class MyServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer* pServer) {
+    deviceConnected = true;
+  }
+  void onDisconnect(BLEServer* pServer) {
+    deviceConnected = false;
+  }
+};
+
+#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+
 HardwareSerial GPS_Serial(1);
 
 Adafruit_GPS GPS(&GPS_Serial);
@@ -32,11 +53,32 @@ void setup() {
   
   Serial.println("Waiting for GPS fix...");
 
+  //BLE
+  BLEDevice::init("ESP32 BLE_2");
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+
+  BLEService* pService = pServer->createService(SERVICE_UUID);
+  pCharacteristic = pService->createCharacteristic(
+    CHARACTERISTIC_UUID,
+    BLECharacteristic::PROPERTY_READ |
+    BLECharacteristic::PROPERTY_NOTIFY
+  );
+  pCharacteristic->addDescriptor(new BLE2902());
+  pService->start();
+  pServer->getAdvertising()->start();
+
+  Serial.println("BLE Server is running...");
 }
+
+
+
 
 void loop() {
   // Read data from GPS
   char c = GPS.read();
+  String msg;
+  
   
   // If we got a new NMEA sentence, parse it
   if (GPS.newNMEAreceived()) {
@@ -59,6 +101,22 @@ void loop() {
       }
       if (millis() - timer > 60000) {
         timer = millis();
+
+         if (deviceConnected) {
+
+      msg = "Time:" + String(GPS.hour, 1) + ":"+ String(GPS.minute,1)+':'+String(GPS.seconds,1);
+      pCharacteristic->setValue(msg.c_str());
+      pCharacteristic->notify();
+      delay(10);
+
+      msg = "Date:" + String(GPS.day, 1) + ":"+ String(GPS.month,1)+':'+String(GPS.year,1);
+      pCharacteristic->setValue(msg.c_str());
+      pCharacteristic->notify();
+      delay(10);
+    }
+
+
+
         //Serial.println("60sec");
       // Print time from GPS (UTC)
         Serial.println("---------------------");
