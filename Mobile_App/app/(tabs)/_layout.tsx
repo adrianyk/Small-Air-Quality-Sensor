@@ -27,6 +27,7 @@ const TabIcon = ({ focused, icon, title }: any) => {
 export default function RootLayout() {
     return (
         <Tabs
+            // This is the styling for the bottom black navigation bar
             screenOptions={{
                 tabBarShowLabel: false,
                 tabBarItemStyle: {
@@ -49,11 +50,13 @@ export default function RootLayout() {
             }}
         >
             <Tabs.Screen
+                // These are the styling for each tab button in the bottom nav bar
                 name="index"
                 options={{
                     title: 'Home',
                     headerShown: false,
                     tabBarIcon: ({ focused }) => (
+                        // `focused` means "when you click this tab"
                         <TabIcon
                             focused={focused} 
                             icon={icons.home} 
