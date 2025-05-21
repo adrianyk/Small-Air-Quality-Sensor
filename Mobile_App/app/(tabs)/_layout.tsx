@@ -5,6 +5,9 @@ import { images } from "@/constants/images";
 import { icons } from "@/constants/icons";
 
 const TabIcon = ({ focused, icon, title }: any) => {
+    // This `TabIcon` defines the styling for each tab button on the bottom navigation bar
+    
+    // when focused (when you press this tab button)
     if(focused) {
         return (
             <ImageBackground
@@ -17,6 +20,7 @@ const TabIcon = ({ focused, icon, title }: any) => {
         )
     }
 
+    // else when not focused (when this tab button is not pressed)
     return (
         <View className="size-full justify center items-center mt-4 rounded-full">
             <Image source={icon} tintColor="#A8B5D8" className="size-5" />
