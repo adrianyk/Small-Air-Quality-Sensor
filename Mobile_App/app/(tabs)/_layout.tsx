@@ -1,6 +1,6 @@
-import { View, Text, ImageBackground, Image } from "react-native";
-import React from "react";
 import { Tabs } from "expo-router";
+import { View, Text, ImageBackground, Image } from "react-native";
+
 import { images } from "@/constants/images";
 import { icons } from "@/constants/icons";
 
@@ -28,7 +28,7 @@ const TabIcon = ({ focused, icon, title }: any) => {
     )
 }
 
-export default function RootLayout() {
+export default function TabsLayout() {
     return (
         <Tabs
             // This is the styling for the bottom black navigation bar

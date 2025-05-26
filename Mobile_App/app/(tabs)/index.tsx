@@ -1,10 +1,11 @@
 // Home screen
 import { Image, ScrollView, Text, View } from "react-native";
-import {Link} from "expo-router";
+import { useRouter } from "expo-router";
+
 import { images } from "@/constants/images";
 import { icons } from "@/constants/icons";
+
 import SearchBar from "@/components/SearchBar";
-import { useRouter } from "expo-router";
 import ThemedView from "@/components/ThemedView";
 import ThemedText from "@/components/ThemedText";
 

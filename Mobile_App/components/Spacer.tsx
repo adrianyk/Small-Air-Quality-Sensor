@@ -1,6 +1,4 @@
 import { View, DimensionValue } from 'react-native'
-import React from 'react'
-
 
 type SpacerProps = {
   width?: DimensionValue

@@ -1,5 +1,5 @@
 import { Image, View, TextInput } from "react-native";
-import React from "react";
+
 import { icons } from "@/constants/icons";
 
 // This `interface Props` is a type def that tells react native what types placeholder and onPress are
