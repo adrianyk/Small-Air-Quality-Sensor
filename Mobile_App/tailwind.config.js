@@ -2,6 +2,14 @@
 module.exports = {
   content: ["./app/**/*.{js,jsx,ts,tsx}"], // NOTE: Update this to include the paths to all of your component files.
   presets: [require("nativewind/preset")],
+  safelist: [
+    "text-dark-title",
+    "text-dark-text",
+    "text-light-title",
+    "text-light-text",
+    "bg-dark-background",
+    "bg-light-background"
+  ],
   theme: {
     extend: {
       colors: {
