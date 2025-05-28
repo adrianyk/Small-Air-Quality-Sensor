@@ -1,6 +1,6 @@
 // Home screen
 import { Image, ScrollView, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 
 import { images } from "@/constants/images";
 import { icons } from "@/constants/icons";
@@ -8,6 +8,7 @@ import { icons } from "@/constants/icons";
 import SearchBar from "@/components/SearchBar";
 import ThemedView from "@/components/ThemedView";
 import ThemedText from "@/components/ThemedText";
+import Spacer from "@/components/Spacer";
 
 export default function Index() {
   const router = useRouter();
@@ -21,6 +22,13 @@ export default function Index() {
         <ThemedText className='font-bold text-[18px] text-center' title={true}>
           Dashboard
         </ThemedText>
+
+        <Spacer height={20} />
+        <Link href='/test-bluetooth'>
+          <ThemedText className='text-center'>
+            Bluetooth (testing)
+          </ThemedText>
+        </Link>
 
         <View className="flex-1 mt-5">
           <SearchBar 
