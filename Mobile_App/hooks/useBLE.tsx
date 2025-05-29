@@ -151,6 +151,7 @@ function useBLE(): BluetoothLowEnergyApi {
 
   const connectToDevice = async (device: Device) => {
     try {
+      bleManager.cancelDeviceConnection(device.id);
       const deviceConnection = await bleManager.connectToDevice(device.id);
       setConnectedDevice(deviceConnection);
       console.log("connectToDevice connected device: ", deviceConnection)
@@ -165,10 +166,20 @@ function useBLE(): BluetoothLowEnergyApi {
 
   const disconnectFromDevice = () => {
     if (connectedDevice) {
-      bleManager.cancelDeviceConnection(connectedDevice.id);
-      console.log("disconnectFromDevice success: ", connectedDevice)
-      setConnectedDevice(null);
-      setHeartRate("null");
+      // bleManager.cancelDeviceConnection(connectedDevice.id);
+      // console.log("disconnectFromDevice success: ", connectedDevice)
+      // setConnectedDevice(null);
+      // setHeartRate("null");
+      try {
+        console.log("Disconnecting from device...");
+        bleManager.cancelDeviceConnection(connectedDevice.id);
+      } catch (error) {
+        console.warn("Error while disconnecting:", error);
+      } finally {
+        console.log("disconnectFromDevice success: ", connectedDevice)
+        setConnectedDevice(null);
+        setHeartRate("null");
+      }
     }
   };
 
