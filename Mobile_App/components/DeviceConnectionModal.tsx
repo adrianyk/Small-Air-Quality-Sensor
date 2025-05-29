@@ -21,6 +21,7 @@ type DeviceModalProps = {
   visible: boolean;
   connectToPeripheral: (device: Device) => void;
   closeModal: () => void;
+  refreshDevices: () => void;
 };
 
 const DeviceModalListItem: FC<DeviceModalListItemProps> = (props) => {
@@ -68,6 +69,14 @@ const DeviceModal: FC<DeviceModalProps> = (props) => {
         <Text style={modalStyle.modalTitleText}>
           Tap on a device to connect
         </Text>
+
+        <TouchableOpacity
+          style={modalStyle.ctaButton}
+          onPress={props.refreshDevices}
+        >
+          <Text style={modalStyle.ctaButtonText}>Refresh</Text>
+        </TouchableOpacity>
+        
         <FlatList
           contentContainerStyle={modalStyle.modalFlatlistContiner}
           data={devices}
