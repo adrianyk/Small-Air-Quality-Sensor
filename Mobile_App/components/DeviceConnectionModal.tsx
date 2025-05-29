@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Device } from "react-native-ble-plx";
+import { Feather } from '@expo/vector-icons';
 
 type DeviceModalListItemProps = {
   item: ListRenderItemInfo<Device>;
@@ -66,6 +67,10 @@ const DeviceModal: FC<DeviceModalProps> = (props) => {
       visible={visible}
     >
       <SafeAreaView style={modalStyle.modalTitle}>
+        <TouchableOpacity onPress={closeModal} style={modalStyle.backButton}>
+          <Feather name="arrow-left" size={24} color="#007AFF" />
+        </TouchableOpacity>
+
         <Text style={modalStyle.modalTitleText}>
           Tap on a device to connect
         </Text>
@@ -128,6 +133,16 @@ const modalStyle = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "white",
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    marginLeft: 16,
+    marginBottom: 12,
+    padding: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: "#007AFF",
   },
 });
 
