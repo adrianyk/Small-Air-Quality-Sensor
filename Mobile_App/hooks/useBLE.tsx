@@ -101,6 +101,8 @@ function useBLE(): BluetoothLowEnergyApi {
     devices.findIndex((device) => nextDevice.id === device.id) > -1;
 
   const scanForPeripherals = () => {
+    bleManager.stopDeviceScan(); // Stop previous scan if any
+    console.log("scanForPeripherals scan stopped...");
     setAllDevices([]); // Clear existing list
     // console.log("bleManager instance:", bleManager);
     bleManager.startDeviceScan(null, null, (error, device) => {

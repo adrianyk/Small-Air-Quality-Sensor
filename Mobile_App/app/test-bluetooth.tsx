@@ -67,6 +67,7 @@ const App = () => {
         visible={isModalVisible}
         connectToPeripheral={connectToDevice}
         devices={allDevices}
+        refreshDevices={scanForPeripherals}
       />
     </SafeAreaView>
   );
