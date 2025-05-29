@@ -24,6 +24,7 @@ interface BluetoothLowEnergyApi {
   scanForPeripherals(): void;
   connectToDevice: (deviceId: Device) => Promise<void>;
   disconnectFromDevice: () => void;
+  stopScan: () => void;
   connectedDevice: Device | null;
   allDevices: Device[];
   heartRate: string;
@@ -99,13 +100,14 @@ function useBLE(): BluetoothLowEnergyApi {
   const isDuplicteDevice = (devices: Device[], nextDevice: Device) =>
     devices.findIndex((device) => nextDevice.id === device.id) > -1;
 
-  const scanForPeripherals = () =>
-    console.log("Starting scan...");
+  const scanForPeripherals = () => {
+    setAllDevices([]); // Clear existing list
     // console.log("bleManager instance:", bleManager);
     bleManager.startDeviceScan(null, null, (error, device) => {
-      // if (error) {
-      //   console.log("scanForPeripherals: ", error);
-      // }
+      console.log("Starting scan...");
+      if (error) {
+        console.log("scanForPeripherals: ", error);
+      }
       // else {
       //   console.log("no errors")
       // }
@@ -143,6 +145,7 @@ function useBLE(): BluetoothLowEnergyApi {
       //   console.log("No device discovered")
       // }
     });
+  }
 
   const connectToDevice = async (device: Device) => {
     try {
@@ -151,6 +154,7 @@ function useBLE(): BluetoothLowEnergyApi {
       console.log("connectToDevice connected device: ", deviceConnection)
       await deviceConnection.discoverAllServicesAndCharacteristics();
       bleManager.stopDeviceScan();
+      console.log("connectToDevice: device connected, scanning stopped")
       startStreamingData(deviceConnection);
     } catch (e) {
       console.log("connectToDevice: FAILED TO CONNECT", e);
@@ -195,6 +199,11 @@ function useBLE(): BluetoothLowEnergyApi {
     }
   };
 
+  const stopScan = () => {
+    bleManager.stopDeviceScan();
+    console.log("stopScan: modal closed, scanning stopped")
+  };
+
   return {
     scanForPeripherals,
     requestPermissions,
@@ -203,6 +212,7 @@ function useBLE(): BluetoothLowEnergyApi {
     connectedDevice,
     disconnectFromDevice,
     heartRate,
+    stopScan,
   };
 }
 

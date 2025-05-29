@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -19,6 +19,7 @@ const App = () => {
     connectedDevice,
     heartRate,
     disconnectFromDevice,
+    stopScan,
   } = useBLE();
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
@@ -30,6 +31,7 @@ const App = () => {
   };
 
   const hideModal = () => {
+    stopScan();
     setIsModalVisible(false);
   };
 
@@ -43,12 +45,12 @@ const App = () => {
       <View style={styles.heartRateTitleWrapper}>
         {connectedDevice ? (
           <>
-            <Text style={styles.heartRateTitleText}>Your Heart Rate Is:</Text>
+            <Text style={styles.heartRateTitleText}>Data from Beacon:</Text>
             <Text style={styles.heartRateText}>{heartRate}</Text>
           </>
         ) : (
           <Text style={styles.heartRateTitleText}>
-            Please Connect to a Heart Rate Monitor
+            Please Connect to a Beacon
           </Text>
         )}
       </View>
