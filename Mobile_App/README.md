@@ -13,6 +13,7 @@ Use this when testing basic app functionality before Bluetooth integration or na
 ### Follow steps below:
 
 1. First make sure you have Node (`node.js`) installed. Visit their [website](https://nodejs.org/en "https://nodejs.org/en") and download the latest LTS (Long-Term Support) version. Run the installer to install `node.js` onto your laptop. 
+
    > [!NOTE]  
    > If you have already installed Node on your system, make sure it is Node 18 or newer.
 
@@ -29,6 +30,7 @@ Use this when testing basic app functionality before Bluetooth integration or na
    ```bash
    npx expo start
    ```
+
    > [!NOTE]  
    > If you run into any errors, try running `npx expo start --clear` instead
 
@@ -40,8 +42,11 @@ Use this when testing basic app functionality before Bluetooth integration or na
    - [Expo Go](https://expo.dev/go "https://expo.dev/go") <- This is what you want (trust)
       - What it is: a limited sandbox for trying out app development with Expo
       - _**Easiest and simplest method**_ to test the app, works on **_both_** Android and Apple devices! (very convenient)
-      - Download the Expo Go app for free from Google Play (Android) or App Store (Apple)
+      - Download the Expo Go app for free from Google Play (Android) or App Store (Apple) and follow the instructions in your terminal. 
       - [Having problems opening in Expo Go?](https://docs.expo.dev/get-started/start-developing/#having-problems "https://docs.expo.dev/get-started/start-developing/#having-problems")
+
+		> [!IMPORTANT] 
+		> Make sure your phone and laptop are connected to the same network!
 
 6. If you've made changes but the app doesn't refresh on your phone, hit `r` in the terminal on your laptop to reload.
 
@@ -55,6 +60,7 @@ Use this after running npx expo prebuild, when working with Bluetooth or other n
 ### Follow the steps below:
 
 1. Again, make sure you have Node (`node.js`) installed. See Step 1 [above](#1-running-the-app-with-expo-go--basic-development-setup-before-prebuild).
+
    > [!NOTE]  
    > If you have already installed Node on your system, make sure it is Node 18 or newer.
 
@@ -69,9 +75,10 @@ Use this after running npx expo prebuild, when working with Bluetooth or other n
    6. Add this new entry: `%JAVA_HOME%\bin`
    7. Restart your terminal (or VS Code). Run the command `echo %JAVA_HOME%` in a new terminal and you should see the path to your Java SDK. 
    8. Then try running `java -version` in the terminal and you should see something like `java version "17.0.x"`. 
+
    > [!NOTE]  
    > If you already have a JDK on your system, we recommend JDK17. You may encounter problems using higher JDK versions.  
-
+      
    > [!NOTE]  
    > if (errors) {   
    >   do step 4 under "**System variables**" instead   
@@ -106,6 +113,9 @@ Use this after running npx expo prebuild, when working with Bluetooth or other n
          ```
       - This should generate a QR code in your terminal. Open the custom dev client app and use it to scan the QR code or input the dev server URL manually. 
       - The app should open after loading for a while. 
+
+      > [!IMPORTANT] 
+		> Make sure your phone and laptop are connected to the same network!
 
 7. If you've made changes but the app doesn't refresh on your phone, hit `r` in the terminal on your laptop to reload.
 
