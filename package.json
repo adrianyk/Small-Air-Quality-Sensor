@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "expo-router": "^5.0.7",
+    "firebase": "^11.9.0",
+    "nativewind": "^4.1.23"
+  },
+  "devDependencies": {
+    "@types/react-native": "^0.72.8",
+    "typescript": "~5.8.3"
+  }
+}
