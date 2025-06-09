@@ -20,8 +20,12 @@ const App = () => {
     heartRate,
     disconnectFromDevice,
     stopScan,
+    startRecordingData,
+    stopRecordingData, 
   } = useBLE();
+
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
 
   const scanForDevices = async () => {
     const isPermissionsEnabled = await requestPermissions();
@@ -40,6 +44,15 @@ const App = () => {
     setIsModalVisible(true);
   };
 
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecordingData();
+    } else {
+      startRecordingData();
+    }
+    setIsRecording(!isRecording);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.heartRateTitleWrapper}>
@@ -54,6 +67,7 @@ const App = () => {
           </Text>
         )}
       </View>
+
       <TouchableOpacity
         onPress={connectedDevice ? disconnectFromDevice : openModal}
         style={styles.ctaButton}
@@ -62,6 +76,21 @@ const App = () => {
           {connectedDevice ? "Disconnect" : "Connect"}
         </Text>
       </TouchableOpacity>
+
+      {connectedDevice && (
+        <TouchableOpacity
+          onPress={toggleRecording}
+          style={[
+            styles.ctaButton,
+            { backgroundColor: isRecording ? "#F44336" : "#4CAF50" },
+          ]}
+        >
+          <Text style={styles.ctaButtonText}>
+            {isRecording ? "Stop Recording" : "Start Recording"}
+          </Text>
+        </TouchableOpacity>
+      )}
+
       <DeviceModal
         closeModal={hideModal}
         visible={isModalVisible}
