@@ -4,20 +4,24 @@ console.log("useBLE hook mounted");
 /* eslint-disable no-bitwise */
 import { useMemo, useState, useEffect } from "react";
 import { PermissionsAndroid, Platform } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   BleError,
   BleManager,
   Characteristic,
   Device,
 } from "react-native-ble-plx";
+import { Buffer } from "buffer";
 
 import * as ExpoDevice from "expo-device";
 
 import base64 from "react-native-base64";
 
 // Make sure these are consistent with the ESP32 code
-const HEART_RATE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-const HEART_RATE_CHARACTERISTIC = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+const CHARACTERISTC_DATA_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+const CHARACTERISTIC_COMMAND_UUID = "12345678-1234-5678-1234-56789abcdef0";
+
 
 interface BluetoothLowEnergyApi {
   requestPermissions(): Promise<boolean>;
@@ -28,6 +32,8 @@ interface BluetoothLowEnergyApi {
   connectedDevice: Device | null;
   allDevices: Device[];
   heartRate: string;
+  startRecordingData: () => Promise<void>;
+  stopRecordingData: () => Promise<void>;
 }
 
 function useBLE(): BluetoothLowEnergyApi {
@@ -164,6 +170,42 @@ function useBLE(): BluetoothLowEnergyApi {
     }
   };
 
+    const startRecordingData = async () => {
+    if (connectedDevice) {
+      try {
+        const value = "START"; // Or any trigger command your ESP32 understands
+
+        await connectedDevice.writeCharacteristicWithResponseForService(
+          SERVICE_UUID,
+          CHARACTERISTIC_COMMAND_UUID,
+          Buffer.from("START").toString("base64")  // Encode as base64
+        );
+
+        console.log("Sent START command to ESP32");
+      } catch (error) {
+        console.error("Failed to send command:", error);
+      }
+    }
+  };
+
+  const stopRecordingData = async () => {
+    if (connectedDevice) {
+      try {
+        const stopCommand = "STOP";
+
+        await connectedDevice.writeCharacteristicWithResponseForService(
+          SERVICE_UUID,
+          CHARACTERISTIC_COMMAND_UUID,
+          Buffer.from(stopCommand).toString("base64")
+        );
+
+        console.log("Sent STOP command to ESP32");
+      } catch (error) {
+        console.error("Failed to send STOP command:", error);
+      }
+    }
+  };
+
   const disconnectFromDevice = () => {
     if (connectedDevice) {
       // bleManager.cancelDeviceConnection(connectedDevice.id);
@@ -203,8 +245,8 @@ function useBLE(): BluetoothLowEnergyApi {
   const startStreamingData = async (device: Device) => {
     if (device) {
       device.monitorCharacteristicForService(
-        HEART_RATE_UUID,
-        HEART_RATE_CHARACTERISTIC,
+        SERVICE_UUID,
+        CHARACTERISTC_DATA_UUID,
         onHeartRateUpdate
       );
     } else {
@@ -226,6 +268,8 @@ function useBLE(): BluetoothLowEnergyApi {
     disconnectFromDevice,
     heartRate,
     stopScan,
+    startRecordingData,
+    stopRecordingData,
   };
 }
 
