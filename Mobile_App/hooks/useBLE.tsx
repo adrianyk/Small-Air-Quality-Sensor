@@ -12,7 +12,7 @@ import {
   Device,
 } from "react-native-ble-plx";
 import { Buffer } from "buffer";
-
+import { useBLEDataHandler } from './useBLEDataHandler';
 import * as ExpoDevice from "expo-device";
 
 import base64 from "react-native-base64";
@@ -37,6 +37,7 @@ interface BluetoothLowEnergyApi {
 }
 
 function useBLE(): BluetoothLowEnergyApi {
+  const { handleBLEField } = useBLEDataHandler();
   const bleManager = useMemo(() => new BleManager(), []);
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
@@ -131,27 +132,6 @@ function useBLE(): BluetoothLowEnergyApi {
           return prevState;
         });
       }
-      // if (device) {
-      //   console.log("Discovered device:", {
-      //     id: device.id,
-      //     name: device.name,
-      //     // localName: device.localName,
-      //     // manufacturerData: device.manufacturerData,
-      //     // serviceUUIDs: device.serviceUUIDs,
-      //     // rssi: device.rssi,
-      //   });
-      //   if (device.name?.includes("ESP32")) {
-      //     setAllDevices((prevState: Device[]) => {
-      //       if (!isDuplicteDevice(prevState, device)) {
-      //         return [...prevState, device];
-      //       }
-      //       return prevState;
-      //     });
-      //   }
-      // }
-      // else {
-      //   console.log("No device discovered")
-      // }
     });
   }
 
@@ -164,7 +144,7 @@ function useBLE(): BluetoothLowEnergyApi {
       await deviceConnection.discoverAllServicesAndCharacteristics();
       bleManager.stopDeviceScan();
       console.log("connectToDevice: device connected, scanning stopped")
-      startStreamingData(deviceConnection);
+      startStreamingData(deviceConnection, handleBLEField);
     } catch (e) {
       console.log("connectToDevice: FAILED TO CONNECT", e);
     }
@@ -227,7 +207,8 @@ function useBLE(): BluetoothLowEnergyApi {
 
   const onHeartRateUpdate = (
     error: BleError | null,
-    characteristic: Characteristic | null
+    characteristic: Characteristic | null,
+    handleBLEField?: (data: string) => void
   ) => {
     if (error) {
       console.log("onHeartRateUpdate: ", error);
@@ -240,15 +221,17 @@ function useBLE(): BluetoothLowEnergyApi {
     const rawData = base64.decode(characteristic.value);
 
     setHeartRate(rawData);
+
+    if (handleBLEField) handleBLEField(rawData);
   };
 
-  const startStreamingData = async (device: Device) => {
+  const startStreamingData = async (device: Device, handleBLEField?: (data: string) => void) => {
     if (device) {
       device.monitorCharacteristicForService(
         SERVICE_UUID,
         CHARACTERISTC_DATA_UUID,
-        onHeartRateUpdate
-      );
+        (error, characteristic) => onHeartRateUpdate(error, characteristic, handleBLEField)
+    );
     } else {
       console.log("No Device Connected");
     }
