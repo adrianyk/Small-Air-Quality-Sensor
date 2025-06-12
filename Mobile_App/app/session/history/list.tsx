@@ -1,14 +1,71 @@
-import ThemedView from '@/components/ThemedView'
-import ThemedText from '@/components/ThemedText'
+import React, { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { FlatList, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ThemedView from '@/components/ThemedView';
+import ThemedText from '@/components/ThemedText';
+import { useRouter } from 'expo-router'; 
+
+type SessionLabels = Record<string, string>;
 
 const PastSessionList = () => {
-  return (
-    <ThemedView className='flex-1 justify-center item-center'>
-        <ThemedText className='font-bold text-[18px] text-center' title={true}>
-            All past sessions:
-        </ThemedText>
-    </ThemedView>
-  )
-}
+  const [sessions, setSessions] = useState<SessionLabels>({});
+  const router = useRouter();
+  
 
-export default PastSessionList
+ useFocusEffect(
+  useCallback(() => {
+    const fetchSessions = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('sessionLabels');
+        if (stored) {
+          const parsed: SessionLabels = JSON.parse(stored);
+          setSessions(parsed);
+        } else {
+          setSessions({});
+        }
+      } catch (e) {
+        console.error('Failed to load session labels:', e);
+      }
+    };
+
+    fetchSessions();
+  }, [])
+);
+
+
+  const renderItem = ({ item }: { item: [string, string] }) => {
+    const [sessionId, label] = item;
+    return (
+<TouchableOpacity
+  onPress={() => router.push({
+    pathname: "/session/history/[id]",
+    params: { id: sessionId },
+  })}
+  style={{ padding: 16, borderBottomWidth: 1, borderColor: '#ccc' }}
+>
+  <ThemedText className="text-lg font-semibold">{label}</ThemedText>
+  <ThemedText className="text-sm text-gray-500">{sessionId}</ThemedText>
+</TouchableOpacity>
+    );
+  };
+
+  return (
+    <ThemedView className="flex-1 p-4">
+      <ThemedText className="font-bold text-xl mb-4" title>
+        All past sessions:
+      </ThemedText>
+
+      <FlatList
+        data={Object.entries(sessions)}
+        keyExtractor={([sessionId]) => sessionId}
+        renderItem={renderItem}
+        ListEmptyComponent={
+          <ThemedText>No sessions found.</ThemedText>
+        }
+      />
+    </ThemedView>
+  );
+};
+
+export default PastSessionList;
