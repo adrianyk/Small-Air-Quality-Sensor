@@ -26,7 +26,7 @@ const CHARACTERISTIC_COMMAND_UUID = "12345678-1234-5678-1234-56789abcdef0";
 interface BluetoothLowEnergyApi {
   requestPermissions(): Promise<boolean>;
   scanForPeripherals(): void;
-  connectToDevice: (deviceId: Device) => Promise<void>;
+  connectToDevice: (device: Device, handleBLEField?: (data: string) => void) => Promise<void>;
   disconnectFromDevice: () => void;
   stopScan: () => void;
   connectedDevice: Device | null;
@@ -36,8 +36,7 @@ interface BluetoothLowEnergyApi {
   stopRecordingData: () => Promise<void>;
 }
 
-function useBLE(): BluetoothLowEnergyApi {
-  const { handleBLEField } = useBLEDataHandler();
+function useBLE(handleBLEField?: (data: string) => void): BluetoothLowEnergyApi {
   const bleManager = useMemo(() => new BleManager(), []);
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
@@ -135,7 +134,7 @@ function useBLE(): BluetoothLowEnergyApi {
     });
   }
 
-  const connectToDevice = async (device: Device) => {
+  const connectToDevice = async (device: Device, handleBLEField?: (data: string) => void) => {
     try {
       bleManager.cancelDeviceConnection(device.id);
       const deviceConnection = await bleManager.connectToDevice(device.id);
@@ -148,6 +147,7 @@ function useBLE(): BluetoothLowEnergyApi {
     } catch (e) {
       console.log("connectToDevice: FAILED TO CONNECT", e);
     }
+    
   };
 
     const startRecordingData = async () => {
@@ -231,29 +231,31 @@ function useBLE(): BluetoothLowEnergyApi {
         SERVICE_UUID,
         CHARACTERISTC_DATA_UUID,
         (error, characteristic) => onHeartRateUpdate(error, characteristic, handleBLEField)
-    );
+      );
     } else {
       console.log("No Device Connected");
     }
   };
+
+
 
   const stopScan = () => {
     bleManager.stopDeviceScan();
     console.log("stopScan: modal closed, scanning stopped")
   };
 
-  return {
-    scanForPeripherals,
-    requestPermissions,
-    connectToDevice,
-    allDevices,
-    connectedDevice,
-    disconnectFromDevice,
-    heartRate,
-    stopScan,
-    startRecordingData,
-    stopRecordingData,
-  };
+return {
+  scanForPeripherals,
+  requestPermissions,
+  connectToDevice, 
+  allDevices,
+  connectedDevice,
+  disconnectFromDevice,
+  heartRate,
+  stopScan,
+  startRecordingData,
+  stopRecordingData,
+};
 }
 
 export default useBLE;
