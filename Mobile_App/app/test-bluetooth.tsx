@@ -8,7 +8,8 @@ import {
   FlatList,
   ScrollView,
   Dimensions,
-  Alert
+  Alert,
+  TextInput
 } from "react-native";
 import { useBLEDataHandler, expectedKeys } from '../hooks/useBLEDataHandler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -29,15 +30,20 @@ const App = () => {
     stopRecordingData, 
   } = useBLE();
 
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
   const {
     rows,
     handleBLEField,
     loadSavedData,
-    clearSavedData
-  } = useBLEDataHandler();
+    clearSavedData,
+    registerSession
+  } = useBLEDataHandler(sessionId);
 
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [sessionLabel, setSessionLabel] = useState<string>("Untitled Session");
+
 
   useEffect(() => {
   loadSavedData();
@@ -79,28 +85,46 @@ const App = () => {
       <Text>No recorded data yet.</Text>
     )}
   </View>
+  
 
 
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (isRecording) {
       stopRecordingData();
+      setIsRecording(false);
     } else {
-      startRecordingData();
+      const newSessionId = `session-${Date.now()}`;
+      setSessionId(newSessionId);
+
+      setTimeout(async () => {
+        if (registerSession && clearSavedData) {
+          await registerSession(sessionLabel.trim() || "Untitled Session");
+          await clearSavedData();
+        }
+        startRecordingData();
+        setIsRecording(true);
+      }, 100);
     }
-    setIsRecording(!isRecording);
   };
 
-    const debugCheckStorage = async () => {
+
+
+ const debugCheckStorage = async () => {
     try {
+      if (!sessionId) {
+        Alert.alert('Error', 'No session ID available');
+        return;
+      }
+
       // 1. Check what's in AsyncStorage
-      const storedData = await AsyncStorage.getItem('bleData');
+      const storedData = await AsyncStorage.getItem(sessionId);
       console.log('Raw AsyncStorage data:', storedData);
       
       // 2. Check the parsed data
       const parsedData = storedData ? JSON.parse(storedData) : [];
       console.log('Parsed data:', parsedData);
       console.log('Number of records:', parsedData.length);
-      
+      console.log('Session ID:', sessionId);
       // 3. Check the rows state
       console.log('Current rows state:', rows);
       
@@ -122,6 +146,7 @@ const App = () => {
       Alert.alert('Error', 'Failed to read storage data');
     }
   };
+
 
  
   return (
@@ -196,6 +221,21 @@ const App = () => {
               { backgroundColor: isRecording ? "#F44336" : "#4CAF50" },
             ]}
           >
+            <View style={{ paddingHorizontal: 20, marginBottom: 10 }}>
+              <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Session Name:</Text>
+              <TextInput
+                placeholder="Enter session name"
+                value={sessionLabel}
+                onChangeText={setSessionLabel}
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#ccc',
+                  borderRadius: 5,
+                  padding: 10,
+                  backgroundColor: 'white',
+                }}
+              />
+            </View>
             <Text style={styles.ctaButtonText}>
               {isRecording ? "Stop Recording" : "Start Recording"}
             </Text>
@@ -206,7 +246,7 @@ const App = () => {
       <DeviceModal
         closeModal={hideModal}
         visible={isModalVisible}
-        connectToPeripheral={connectToDevice}
+        connectToPeripheral={(device) => connectToDevice(device, handleBLEField)}
         devices={allDevices}
         refreshDevices={scanForPeripherals}
       />
