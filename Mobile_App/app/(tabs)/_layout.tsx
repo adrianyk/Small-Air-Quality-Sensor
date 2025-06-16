@@ -1,8 +1,10 @@
-import { Tabs } from "expo-router";
+import { Tabs, Redirect } from "expo-router";
 import { View, Text, ImageBackground, Image } from "react-native";
 
 import { images } from "@/constants/images";
 import { icons } from "@/constants/icons";
+
+import { useAuth } from '@/contexts/AuthContext';
 
 const TabIcon = ({ focused, icon, title }: any) => {
     // This `TabIcon` defines the styling for each tab button on the bottom navigation bar
@@ -29,6 +31,11 @@ const TabIcon = ({ focused, icon, title }: any) => {
 }
 
 export default function TabsLayout() {
+    const { user, loading } = useAuth();
+
+    if (loading) return null;
+    if (!user) return <Redirect href="/login" />;
+
     return (
         <Tabs
             // This is the styling for the bottom black navigation bar
