@@ -9,12 +9,15 @@ import {
   ScrollView,
   Dimensions,
   Alert,
-  TextInput
+  TextInput,
+  Button
 } from "react-native";
 import { useBLEDataHandler, expectedKeys } from '../hooks/useBLEDataHandler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceModal from "@/components/DeviceConnectionModal";
 import useBLE from "@/hooks/useBLE";
+import { router } from "expo-router";
+import Spacer from "@/components/Spacer";
 
 const App = () => {
   const {
@@ -154,6 +157,9 @@ const App = () => {
  
   return (
     <SafeAreaView style={styles.container}>
+      <Spacer height={20} />
+      <Button title="Back to home" onPress={() => router.push('/')} />
+      
       <View style={styles.heartRateTitleWrapper}>
         {connectedDevice ? (
           <>

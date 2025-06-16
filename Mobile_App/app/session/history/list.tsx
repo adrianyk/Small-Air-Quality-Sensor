@@ -1,10 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { FlatList, TouchableOpacity } from 'react-native';
+import { Button, FlatList, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
 import { useRouter } from 'expo-router'; 
+import Spacer from '@/components/Spacer';
 
 type SessionLabels = Record<string, string>;
 
@@ -57,7 +58,11 @@ const PastSessionList = () => {
 
   return (
     <ThemedView className="flex-1 p-4">
-      <ThemedText className="font-bold text-xl mb-4" title>
+      <Spacer height={20} />
+      <Button title="Back to home" onPress={() => router.push('/')} />
+      
+      <Spacer height={20} />
+      <ThemedText className="text-center font-bold text-xl mb-4" title>
         All past sessions:
       </ThemedText>
 
@@ -68,7 +73,7 @@ const PastSessionList = () => {
         refreshing={refreshing}
         onRefresh={onRefresh}
         ListEmptyComponent={
-          <ThemedText>No sessions found.</ThemedText>
+          <ThemedText className="text-center">No sessions found.</ThemedText>
         }
       />
     </ThemedView>
