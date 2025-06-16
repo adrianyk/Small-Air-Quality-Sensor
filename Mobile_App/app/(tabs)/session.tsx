@@ -20,6 +20,9 @@ const Session = () => {
             </Link>
 
         </ThemedView>
+
+
+
     )
 }
 

@@ -30,7 +30,8 @@ const App = () => {
     stopRecordingData, 
   } = useBLE();
 
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string>(() => `session-${Date.now()}`);
+
 
   const {
     rows,
@@ -96,16 +97,18 @@ const App = () => {
       const newSessionId = `session-${Date.now()}`;
       setSessionId(newSessionId);
 
-      setTimeout(async () => {
-        if (registerSession && clearSavedData) {
-          await registerSession(sessionLabel.trim() || "Untitled Session");
-          await clearSavedData();
-        }
-        startRecordingData();
-        setIsRecording(true);
-      }, 100);
+      await clearSavedData();
+
+      await AsyncStorage.setItem('sessionLabels', JSON.stringify({
+        ...(JSON.parse(await AsyncStorage.getItem('sessionLabels') || '{}')),
+        [newSessionId]: sessionLabel.trim() || "Untitled Session",
+      }));
+
+      startRecordingData();
+      setIsRecording(true);
     }
   };
+
 
 
 
@@ -238,6 +241,7 @@ const App = () => {
             </View>
             <Text style={styles.ctaButtonText}>
               {isRecording ? "Stop Recording" : "Start Recording"}
+              
             </Text>
           </TouchableOpacity>
         )}
