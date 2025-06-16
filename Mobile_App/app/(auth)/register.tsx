@@ -1,37 +1,45 @@
-import React, { useState } from 'react';
-import { View, TextInput, Button, Text } from 'react-native';
-import auth from '@react-native-firebase/auth';
+import { TextInput, Button, Text } from 'react-native';
 import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Spacer from "@/components/Spacer";
+import { useAuthForm } from '@/hooks/useAuthForm';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const {
+    email, setEmail,
+    password, setPassword,
+    errorMessage,
+    handleRegister,
+  } = useAuthForm();
 
-  const login = async () => {
-    try {
-      await auth().createUserWithEmailAndPassword(email, password);
-      console.log(auth().currentUser?.email);
-      router.replace('/');
-    } catch (e) {
-      console.error(e);
+  const registerAndRedirect = async () => {
+    const success = await handleRegister();
+    if (success) {
+      router.replace('/'); // redirect after successful registration
     }
   };
 
   return (
-    <View className="p-4">
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} />
+    <SafeAreaView className="p-4">
+      <TextInput 
+        className="border p-2 mb-2"
+        placeholder="Email" 
+        value={email} 
+        onChangeText={setEmail} 
+      />
       <TextInput
+        className="border p-2 mb-2"
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
-      <Button title="Register" onPress={login} />
+      <Button title="Register" onPress={registerAndRedirect} />
+      {errorMessage && <Text className="text-red-500 mt-2">{errorMessage}</Text>}
 
       <Spacer height={20} />
       <Button title="Already have an account? Login" onPress={() => router.push('/login')} />
-    </View>
+    </SafeAreaView>
   );
 }
