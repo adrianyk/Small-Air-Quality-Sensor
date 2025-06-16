@@ -108,11 +108,12 @@ function useBLE(handleBLEField?: (data: string) => void): BluetoothLowEnergyApi 
 
   const scanForPeripherals = () => {
     bleManager.stopDeviceScan(); // Stop previous scan if any
-    console.log("scanForPeripherals scan stopped...");
+    console.log("scanForPeripherals stopping previous scan (if any)...");
     setAllDevices([]); // Clear existing list
+    console.log("list of devices: ", allDevices)
     // console.log("bleManager instance:", bleManager);
+    console.log("Starting scan...");
     bleManager.startDeviceScan(null, null, (error, device) => {
-      console.log("Starting scan...");
       if (error) {
         console.log("scanForPeripherals: ", error);
       }
