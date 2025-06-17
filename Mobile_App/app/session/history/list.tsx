@@ -12,6 +12,7 @@ type SessionLabels = Record<string, string>;
 const PastSessionList = () => {
   const [sessions, setSessions] = useState<SessionLabels>({});
   const [refreshing, setRefreshing] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const router = useRouter();
 
   const fetchSessions = useCallback(async () => {
@@ -56,10 +57,17 @@ const PastSessionList = () => {
     );
   };
 
+  const handleBackToSession = () => {
+    if (navigating) return;
+    setNavigating(true);
+    router.replace('/session');
+    setTimeout(() => setNavigating(false), 1000); // reset after 1 second
+  };
+
   return (
     <ThemedView className="flex-1 p-4">
       <Spacer height={20} />
-      <Button title="Back to home" onPress={() => router.push('/')} />
+      <Button title="Back to session" onPress={handleBackToSession} />
       
       <Spacer height={20} />
       <ThemedText className="text-center font-bold text-xl mb-4" title>

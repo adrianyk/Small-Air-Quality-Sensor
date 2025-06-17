@@ -47,6 +47,7 @@ const App = () => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [sessionLabel, setSessionLabel] = useState<string>("Untitled Session");
+  const [navigating, setNavigating] = useState(false);
 
 
   useEffect(() => {
@@ -153,12 +154,17 @@ const App = () => {
     }
   };
 
-
+  const handleBackToHome = () => {
+    if (navigating) return;
+    setNavigating(true);
+    router.replace('/');
+    setTimeout(() => setNavigating(false), 1000); // reset after 1 second
+  };
  
   return (
     <SafeAreaView style={styles.container}>
       <Spacer height={20} />
-      <Button title="Back to home" onPress={() => router.push('/')} />
+      <Button title="Back to home" onPress={handleBackToHome} />
       
       <View style={styles.heartRateTitleWrapper}>
         {connectedDevice ? (
