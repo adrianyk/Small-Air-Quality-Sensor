@@ -15,7 +15,7 @@ import {
 import { useBLEDataHandler, expectedKeys } from '../hooks/useBLEDataHandler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceModal from "@/components/DeviceConnectionModal";
-import useBLE from "@/hooks/useBLE";
+import { useBLEContext } from "@/contexts/BLEContext";
 import { router } from "expo-router";
 import Spacer from "@/components/Spacer";
 
@@ -32,7 +32,7 @@ const App = () => {
     startRecordingData,
     stopRecordingData, 
     sessionState,
-  } = useBLE();
+  } = useBLEContext();
 
   const [sessionId, setSessionId] = useState<string>(() => `session-${Date.now()}`);
 
@@ -52,6 +52,7 @@ const App = () => {
 
 
   useEffect(() => {
+    console.log("Connected Device in screen:", connectedDevice);
     if (sessionState === "STARTED") {
       setIsRecording(true);
       console.log("useEffect isRecording: ", isRecording)
