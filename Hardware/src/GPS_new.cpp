@@ -44,7 +44,9 @@ void setup() {
   Serial.begin(115200);
   
   // Initialize GPS
-  GPS_Serial.begin(9600, SERIAL_8N1, 26, 25);
+  GPS_Serial.begin(9600, SERIAL_8N1, 16, 17);
+  //RX from esp(16)- TX gps
+  //TX from esp(17)- RX gps
   
   // Configure GPS output
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA); // Get time + position data
@@ -89,59 +91,73 @@ void loop() {
   
   // Print data every minute
     if (GPS.fix) {
-      if (millis()-timer_ave>5000){
+      //take reading every second
+      if (millis()-timer_ave>1000){
         //Serial.println("5sec");
         timer_ave = millis();
         Serial.print(GPS.latitudeDegrees, 6); Serial.print(", "); Serial.println(GPS.longitudeDegrees, 6);
         lon=lon+GPS.longitudeDegrees*1e6;
         lat=lat+GPS.latitudeDegrees*1e6;
         count++;
-        //Serial.print((lat/1e6), 6); Serial.print(", "); Serial.println((lon/1e6), 6);
       
       }
-      if (millis() - timer > 60000) {
+      // Print data every second
+      if (millis() - timer > 10000) {
         timer = millis();
 
          if (deviceConnected) {
 
-      msg = "Time:" + String(GPS.hour, 1) + ":"+ String(GPS.minute,1)+':'+String(GPS.seconds,1);
-      pCharacteristic->setValue(msg.c_str());
-      pCharacteristic->notify();
-      delay(10);
+          msg = "T:" + String(GPS.hour) + "/"+ String(GPS.minute)+'/'+String(GPS.seconds);
+          pCharacteristic->setValue(msg.c_str());
+          pCharacteristic->notify();
+          delay(1000);
+          Serial.println("---------------------");
+          Serial.print("GPS Time: ");
+          Serial.printf("%02d:%02d:%02d", GPS.hour, GPS.minute, GPS.seconds);
+          Serial.println();
 
-      msg = "Date:" + String(GPS.day, 1) + ":"+ String(GPS.month,1)+':'+String(GPS.year,1);
-      pCharacteristic->setValue(msg.c_str());
-      pCharacteristic->notify();
-      delay(10);
-    }
+          msg = "D:" + String(GPS.day) + "/"+ String(GPS.month)+'/'+String(GPS.year);
+          pCharacteristic->setValue(msg.c_str());
+          pCharacteristic->notify();
+          delay(1000);
+          Serial.print("Date: ");
+          Serial.printf("%02d/%02d/%02d", GPS.day, GPS.month, GPS.year);
+          Serial.println();
 
-
-
-        //Serial.println("60sec");
-      // Print time from GPS (UTC)
-        Serial.println("---------------------");
-        Serial.print("GPS Time: ");
-        Serial.printf("%02d:%02d:%02d", GPS.hour, GPS.minute, GPS.seconds);
-        Serial.println();
-        
-        // Print date from GPS
-        Serial.print("Date: ");
-        Serial.printf("%02d/%02d/%02d", GPS.day, GPS.month, GPS.year);
-        Serial.println();
-        // Print location data
-        Serial.print("Location: ");
-        
-        Serial.print(((lat/1e6)/count), 6); Serial.print(", "); Serial.println(((lon/1e6)/count), 6);
-        lon=0;
-        lat=0;
-        count=0;
-        Serial.println("---------------------");
+          msg = "la:"+ String((lat/1e6)/count,6);
+          pCharacteristic->setValue(msg.c_str());
+          pCharacteristic->notify();
+          delay(1000);
+          msg = "lo:"+ String((lon/1e6)/count,6);
+          pCharacteristic->setValue(msg.c_str());
+          pCharacteristic->notify();
+          delay(1000);
+          Serial.print("Location: ");
+          Serial.print(((lat/1e6)/count), 6); Serial.print(", "); Serial.println(((lon/1e6)/count), 6);
+          lon=0;
+          lat=0;
+          count=0;
+          Serial.println("---------------------");
+        }
+      
     
-      }}
+      }
+    }
     else {
       if (millis() - timer > 1000) {
         timer = millis();
         Serial.println("No GPS fix yet...");
+        if (deviceConnected) {
+
+        msg = "No GPS fix yet...";
+        pCharacteristic->setValue(msg.c_str());
+        pCharacteristic->notify();
+        delay(100);
+        msg = "...";
+        pCharacteristic->setValue(msg.c_str());
+        pCharacteristic->notify();
+        delay(100);
+        }
       }
     }
   
