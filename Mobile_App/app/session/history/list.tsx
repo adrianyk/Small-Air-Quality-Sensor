@@ -1,18 +1,19 @@
 import React, { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { Button, FlatList, TouchableOpacity } from 'react-native';
+import { Button, FlatList, TouchableOpacity, View, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
 import { useRouter } from 'expo-router'; 
 import Spacer from '@/components/Spacer';
+import { deleteSession } from '@/utils/storage';
+import { Feather } from '@expo/vector-icons';
 
 type SessionLabels = Record<string, string>;
 
 const PastSessionList = () => {
   const [sessions, setSessions] = useState<SessionLabels>({});
   const [refreshing, setRefreshing] = useState(false);
-  const [navigating, setNavigating] = useState(false);
   const router = useRouter();
 
   const fetchSessions = useCallback(async () => {
@@ -41,51 +42,80 @@ const PastSessionList = () => {
     setRefreshing(false);
   };
 
-  const renderItem = ({ item }: { item: [string, string] }) => {
-    const [sessionId, label] = item;
-    return (
-      <TouchableOpacity
-        onPress={() => router.push({
-          pathname: "/session/history/[id]",
-          params: { id: sessionId },
-        })}
-        style={{ padding: 16, borderBottomWidth: 1, borderColor: '#ccc' }}
-      >
-        <ThemedText className="text-lg font-semibold">{label}</ThemedText>
-        <ThemedText className="text-sm text-gray-500">{sessionId}</ThemedText>
-      </TouchableOpacity>
+  const handleDelete = async (sessionId: string) => {
+    Alert.alert(
+      "Delete Session",
+      "Are you sure you want to delete this session?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            await deleteSession(sessionId);
+            await fetchSessions(); // refresh list
+          },
+        },
+      ]
     );
   };
 
-  const handleBackToSession = () => {
-    if (navigating) return;
-    setNavigating(true);
-    router.replace('/session');
-    setTimeout(() => setNavigating(false), 1000); // reset after 1 second
+  const renderItem = ({ item }: { item: [string, string] }) => {
+    const [sessionId, label] = item;
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingVertical: 16,
+          paddingHorizontal: 12,
+          borderBottomWidth: 1,
+          borderColor: '#ccc',
+        }}
+      >
+        <TouchableOpacity
+          onPress={() =>
+            router.push({
+              pathname: "/session/history/[id]",
+              params: { id: sessionId },
+            })
+          }
+          style={{ flex: 1 }}
+        >
+          <ThemedText className="text-lg font-semibold">{label}</ThemedText>
+          <ThemedText className="text-sm text-gray-500">{sessionId}</ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => handleDelete(sessionId)}>
+          <Feather name="trash-2" size={20} color="red" />
+        </TouchableOpacity>
+      </View>
+    );
   };
 
-  return (
-    <ThemedView className="flex-1 p-4">
-      <Spacer height={20} />
-      <Button title="Back to session" onPress={handleBackToSession} />
-      
-      <Spacer height={20} />
-      <ThemedText className="text-center font-bold text-xl mb-4" title>
-        All past sessions:
-      </ThemedText>
+    return (
+      <ThemedView className="flex-1 p-4">
+        <Spacer height={20} />
+        <Button title="Back to home" onPress={() => router.push('/')} />
+        
+        <Spacer height={20} />
+        <ThemedText className="text-center font-bold text-xl mb-4" title>
+          All past sessions:
+        </ThemedText>
 
-      <FlatList
-        data={Object.entries(sessions)}
-        keyExtractor={([sessionId]) => sessionId}
-        renderItem={renderItem}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        ListEmptyComponent={
-          <ThemedText className="text-center">No sessions found.</ThemedText>
-        }
-      />
-    </ThemedView>
-  );
-};
+        <FlatList
+          data={Object.entries(sessions)}
+          keyExtractor={([sessionId]) => sessionId}
+          renderItem={renderItem}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          ListEmptyComponent={
+            <ThemedText className="text-center">No sessions found.</ThemedText>
+          }
+        />
+      </ThemedView>
+    );
+  };
 
 export default PastSessionList;

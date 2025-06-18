@@ -21,6 +21,7 @@ import base64 from "react-native-base64";
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTC_DATA_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 const CHARACTERISTIC_COMMAND_UUID = "12345678-1234-5678-1234-56789abcdef0";
+const SESSION_STATE_UUID = "1b76c3ce-d232-4796-9d85-cf1a68ecff05";
 
 
 interface BluetoothLowEnergyApi {
@@ -34,6 +35,7 @@ interface BluetoothLowEnergyApi {
   heartRate: string;
   startRecordingData: () => Promise<void>;
   stopRecordingData: () => Promise<void>;
+  sessionState: string;
 }
 
 function useBLE(handleBLEField?: (data: string) => void): BluetoothLowEnergyApi {
@@ -41,6 +43,7 @@ function useBLE(handleBLEField?: (data: string) => void): BluetoothLowEnergyApi 
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
   const [heartRate, setHeartRate] = useState("null");
+  const [sessionState, setSessionState] = useState<string>("UNKNOWN");
 
   useEffect(() => {
     console.log("Connected device updated:", connectedDevice);
@@ -140,16 +143,32 @@ function useBLE(handleBLEField?: (data: string) => void): BluetoothLowEnergyApi 
       bleManager.cancelDeviceConnection(device.id);
       const deviceConnection = await bleManager.connectToDevice(device.id);
       setConnectedDevice(deviceConnection);
-      console.log("connectToDevice connected device: ", deviceConnection)
+      console.log("connectToDevice connected device: ", deviceConnection);
+
       await deviceConnection.discoverAllServicesAndCharacteristics();
       bleManager.stopDeviceScan();
-      console.log("connectToDevice: device connected, scanning stopped")
+
+      // Read SESSION_STATE after connection
+      const sessionStateChar = await deviceConnection.readCharacteristicForService(
+        SERVICE_UUID,
+        SESSION_STATE_UUID
+      );
+      const sessionStateRaw = base64.decode(sessionStateChar.value ?? "");
+      console.log("SESSION_STATE:", sessionStateRaw);
+
+      setSessionState(sessionStateRaw); // <-- Store in hook state
+
+      if (handleBLEField) {
+        handleBLEField(`SESSION_STATE:${sessionStateRaw}`);
+      }
+
       startStreamingData(deviceConnection, handleBLEField);
     } catch (e) {
       console.log("connectToDevice: FAILED TO CONNECT", e);
     }
-    
   };
+
+
 
     const startRecordingData = async () => {
     if (connectedDevice) {
@@ -256,6 +275,7 @@ return {
   stopScan,
   startRecordingData,
   stopRecordingData,
+  sessionState,
 };
 }
 

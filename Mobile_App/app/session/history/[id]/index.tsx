@@ -1,52 +1,112 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, Dimensions } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Dimensions,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { expectedKeys } from '@/hooks/useBLEDataHandler';
 
-const cellWidth = Dimensions.get('window').width / expectedKeys.length;
+const cellWidth = Dimensions.get('window').width / (expectedKeys.length + 1); // +1 for environment
+
+type RowWithEnv = string[]; // data + last element is environment
 
 const SessionHistoryScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [rows, setRows] = useState<string[][]>([]);
+  const [rows, setRows] = useState<RowWithEnv[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [bulkEnvInput, setBulkEnvInput] = useState('');
 
-useEffect(() => {
-  const loadSessionData = async () => {
+  useEffect(() => {
+    const loadSessionData = async () => {
+      try {
+        const storageKey = `bleData-${id}`;
+        const stored = await AsyncStorage.getItem(storageKey);
+        const parsed: string[][] = stored ? JSON.parse(stored) : [];
+
+        if (Array.isArray(parsed)) {
+          // Ensure each row has environment placeholder if not present
+          const withEnv = parsed.map((row) =>
+            row.length === expectedKeys.length ? [...row, ''] : row
+          );
+          setRows(withEnv);
+        } else {
+          console.warn('Parsed data is not an array');
+        }
+      } catch (e) {
+        console.error('Failed to load session data:', e);
+      }
+    };
+
+    loadSessionData();
+  }, [id]);
+
+  const updateEnvironment = async (rowIndex: number, value: string) => {
+    const updatedRows = [...rows];
+    updatedRows[rowIndex] = [...updatedRows[rowIndex]];
+    updatedRows[rowIndex][expectedKeys.length] = value;
+    setRows(updatedRows);
+
     try {
-      const storageKey = `bleData-${id}`;
-      console.log('Loading data from:', storageKey);
-
-      const stored = await AsyncStorage.getItem(storageKey);
-      if (!stored) {
-        console.warn('No data found in storage for:', storageKey);
-      }
-
-      const parsed = stored ? JSON.parse(stored) : [];
-      console.log('Parsed rows:', parsed.length);
-
-      if (Array.isArray(parsed)) {
-        setRows(parsed);
-      } else {
-        console.warn('Parsed data is not an array');
-      }
+      await AsyncStorage.setItem(`bleData-${id}`, JSON.stringify(updatedRows));
     } catch (e) {
-      console.error('Failed to load session data:', e);
+      console.error('Failed to save updated row:', e);
     }
   };
 
-  loadSessionData();
-}, [id]);
+  const toggleRowSelection = (index: number) => {
+    setSelectedRows(prev => {
+      const updated = new Set(prev);
+      updated.has(index) ? updated.delete(index) : updated.add(index);
+      return updated;
+    });
+  };
 
+  const applyBulkEnvironment = async () => {
+    const updatedRows = rows.map((row, index) =>
+      selectedRows.has(index)
+        ? [...row.slice(0, expectedKeys.length), bulkEnvInput]
+        : row
+    );
+    setRows(updatedRows);
+    setSelectedRows(new Set());
+
+    try {
+      await AsyncStorage.setItem(`bleData-${id}`, JSON.stringify(updatedRows));
+    } catch (e) {
+      console.error('Failed to save bulk update:', e);
+    }
+    setBulkEnvInput('');
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Session: {id}</Text>
 
-      {rows.length > 0 ? (
+      {/* Bulk input UI */}
+      <View style={styles.bulkUpdateContainer}>
+        <TextInput
+          style={styles.bulkInput}
+          placeholder="Set environment for selected rows"
+          value={bulkEnvInput}
+          onChangeText={setBulkEnvInput}
+        />
+        <TouchableOpacity onPress={applyBulkEnvironment}>
+          <Text style={styles.bulkApply}>Apply</Text>
+        </TouchableOpacity>
+      </View>
+
+    {rows.length > 0 ? (
+      <ScrollView horizontal>
         <View style={styles.tableContainer}>
           {/* Header */}
           <View style={styles.tableRow}>
-            {expectedKeys.map((key) => (
+            {[...expectedKeys, 'Environment'].map((key) => (
               <View key={key} style={styles.headerCell}>
                 <Text style={styles.headerText}>{key}</Text>
               </View>
@@ -55,20 +115,36 @@ useEffect(() => {
 
           {/* Rows */}
           <ScrollView style={styles.tableBody}>
-            {rows.map((row, i) => (
-              <View key={i} style={styles.tableRow}>
-                {row.map((cell, j) => (
-                  <View key={j} style={styles.cell}>
+            {rows.map((row, rowIndex) => (
+              <TouchableOpacity
+                key={rowIndex}
+                onPress={() => toggleRowSelection(rowIndex)}
+                style={[
+                  styles.tableRow,
+                  selectedRows.has(rowIndex) && styles.selectedRow,
+                ]}
+              >
+                {row.slice(0, expectedKeys.length).map((cell, colIndex) => (
+                  <View key={colIndex} style={styles.cell}>
                     <Text style={styles.cellText}>{cell}</Text>
                   </View>
                 ))}
-              </View>
+                <View style={styles.cell}>
+                  <TextInput
+                    style={styles.envInput}
+                    value={row[expectedKeys.length] || ''}
+                    onChangeText={(text) => updateEnvironment(rowIndex, text)}
+                    placeholder="Enter note"
+                  />
+                </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
-      ) : (
-        <Text style={styles.noData}>No data found for this session.</Text>
-      )}
+      </ScrollView>
+    ) : (
+      <Text style={styles.noData}>No data found for this session.</Text>
+    )}
     </View>
   );
 };
@@ -87,6 +163,27 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
+  bulkUpdateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  bulkInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 12,
+  },
+  bulkApply: {
+    color: '#007AFF',
+    fontWeight: 'bold',
+    fontSize: 12,
+    paddingHorizontal: 10,
+  },
   tableContainer: {
     flex: 1,
     borderWidth: 1,
@@ -101,6 +198,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#eee',
   },
+  selectedRow: {
+    backgroundColor: '#e0f7fa',
+  },
   headerCell: {
     width: cellWidth,
     padding: 6,
@@ -108,7 +208,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cell: {
-    width: cellWidth,
+    flex: 1,
     padding: 6,
     alignItems: 'center',
   },
@@ -121,10 +221,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#333',
   },
+  envInput: {
+    width: '100%',
+    fontSize: 12,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+  },
   noData: {
     marginTop: 20,
     textAlign: 'center',
     color: '#777',
     fontStyle: 'italic',
   },
+  
 });

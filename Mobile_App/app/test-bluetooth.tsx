@@ -31,6 +31,7 @@ const App = () => {
     stopScan,
     startRecordingData,
     stopRecordingData, 
+    sessionState,
   } = useBLE();
 
   const [sessionId, setSessionId] = useState<string>(() => `session-${Date.now()}`);
@@ -51,8 +52,14 @@ const App = () => {
 
 
   useEffect(() => {
-  loadSavedData();
-  }, []);
+    if (sessionState === "STARTED") {
+      setIsRecording(true);
+      console.log("useEffect isRecording: ", isRecording)
+    } else if (sessionState === "STOPPED") {
+      setIsRecording(false);
+      console.log("useEffect isRecording: ", isRecording)
+    }
+  }, [sessionState]);
 
   const scanForDevices = async () => {
     const isPermissionsEnabled = await requestPermissions();
@@ -97,11 +104,10 @@ const App = () => {
     if (isRecording) {
       stopRecordingData();
       setIsRecording(false);
+      console.log("toggleRecodring isRecording: ", isRecording)
     } else {
       const newSessionId = `session-${Date.now()}`;
       setSessionId(newSessionId);
-
-      await clearSavedData();
 
       await AsyncStorage.setItem('sessionLabels', JSON.stringify({
         ...(JSON.parse(await AsyncStorage.getItem('sessionLabels') || '{}')),
@@ -110,6 +116,7 @@ const App = () => {
 
       startRecordingData();
       setIsRecording(true);
+      console.log("toggleRecodring isRecording: ", isRecording)
     }
   };
 
@@ -157,6 +164,7 @@ const App = () => {
   const handleBackToHome = () => {
     if (navigating) return;
     setNavigating(true);
+    console.log("back home triggered", connectedDevice)
     router.replace('/');
     setTimeout(() => setNavigating(false), 1000); // reset after 1 second
   };
