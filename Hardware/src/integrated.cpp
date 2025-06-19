@@ -79,6 +79,10 @@ uint32_t gpsTimer = millis();
 int32_t lon = 0;
 int32_t lat = 0;
 uint16_t gpsCount = 0;
+HardwareSerial GPS_Serial(1);
+Adafruit_GPS GPS(&GPS_Serial);
+#define GPS_RX_PIN 16
+#define GPS_TX_PIN 17
 
 
 const int numKeys = sizeof(csvKeys) / sizeof(csvKeys[0]);
@@ -306,6 +310,12 @@ void setup() {
   }
 
   Serial.printf("Last session number: %d\n", sessionCounter);
+  // Initialize GPS
+  GPS_Serial.begin(9600, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  GPS.sendCommand(PGCMD_ANTENNA);
+  Serial.println("Waiting for GPS fix...");
 }
 
 void loop() {
