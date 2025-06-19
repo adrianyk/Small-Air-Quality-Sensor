@@ -266,8 +266,8 @@ void loop() {
   int currentFieldIndex = 0;
 
   if (rxValue == "START"){
-    readingIndex = 0;
     if (!hasStarted) {
+        readingIndex = 0;
         sessionCounter++;
         currentSessionFile = "/session-" + String(sessionCounter) + ".csv";
 
