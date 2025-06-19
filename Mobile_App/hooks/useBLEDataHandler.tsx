@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const expectedKeys = [
-  "temp", "humidity",
+  "time", "temp", "humidity",
   "pm1_std", "pm25_std", "pm10_std",
   "pm1_env", "pm25_env", "pm10_env"
 ];
@@ -28,7 +28,25 @@ export function useBLEDataHandler(externalSessionId: string | null) {
     const buffer = bufferRef.current;
     const isComplete = expectedKeys.every(k => k in buffer);
     if (isComplete) {
-      const row = expectedKeys.map(k => buffer[k] ?? 'NA');
+      const row = expectedKeys.map(k => {
+        if (k == 'time') {
+          const timestamp = parseInt(buffer[k], 10);
+          if (!isNaN(timestamp)){
+            return new Date(timestamp * 1000)
+              .toLocaleString(undefined, {
+                hour12: false,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              })
+              .replace(',', '\n');
+          }
+        }
+        return buffer[k] ?? 'NA';
+      });
       console.log("Saving row to:", storageKeyRef.current);
       setRows(prev => [...prev, row]);
 

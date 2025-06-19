@@ -62,11 +62,11 @@ const PastSessionList = () => {
 
   const renderItem = ({ item }: { item: [string, string] }) => {
     const [sessionId, label] = item;
+
     return (
       <View
         style={{
           flexDirection: 'row',
-          justifyContent: 'space-between',
           alignItems: 'center',
           paddingVertical: 16,
           paddingHorizontal: 12,
@@ -87,12 +87,25 @@ const PastSessionList = () => {
           <ThemedText className="text-sm text-gray-500">{sessionId}</ThemedText>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          onPress={() =>
+            router.push({
+              pathname: "/session/history/[id]/data",
+              params: { id: sessionId },
+            })
+          }
+          style={{ marginHorizontal: 8 }}
+        >
+          <Feather name="activity" size={20} color="#007AFF" />
+        </TouchableOpacity>
+
         <TouchableOpacity onPress={() => handleDelete(sessionId)}>
           <Feather name="trash-2" size={20} color="red" />
         </TouchableOpacity>
       </View>
     );
   };
+
 
     return (
       <ThemedView className="flex-1 p-4">

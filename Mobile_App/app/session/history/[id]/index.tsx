@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { expectedKeys } from '@/hooks/useBLEDataHandler';
 
 const cellWidth = Dimensions.get('window').width / (expectedKeys.length + 1); // +1 for environment
-
+const width = 80;
 type RowWithEnv = string[]; // data + last element is environment
 
 const SessionHistoryScreen = () => {
@@ -202,17 +202,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0f7fa',
   },
   headerCell: {
-    width: cellWidth,
+    width: width,
     padding: 6,
     backgroundColor: '#4CAF50',
     alignItems: 'center',
   },
   cell: {
+    width: width,
     flex: 1,
     padding: 6,
     alignItems: 'center',
   },
   headerText: {
+    width: cellWidth,
     color: 'white',
     fontSize: 12,
     fontWeight: 'bold',

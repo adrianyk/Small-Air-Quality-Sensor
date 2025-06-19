@@ -22,7 +22,7 @@ const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTC_DATA_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 const CHARACTERISTIC_COMMAND_UUID = "12345678-1234-5678-1234-56789abcdef0";
 const SESSION_STATE_UUID = "1b76c3ce-d232-4796-9d85-cf1a68ecff05";
-
+const TIMESTAMP_UUID = "a66324f1-8fc4-44a6-9be5-a481922ef754";
 
 interface BluetoothLowEnergyApi {
   requestPermissions(): Promise<boolean>;
@@ -170,20 +170,31 @@ function useBLE(handleBLEField?: (data: string) => void): BluetoothLowEnergyApi 
 
 
 
-    const startRecordingData = async () => {
+  const startRecordingData = async () => {
     if (connectedDevice) {
       try {
-        const value = "START"; // Or any trigger command your ESP32 understands
+        // 1. Get current timestamp as ISO string (you could also use UNIX time)
+        const unixTime = Math.floor(Date.now() / 1000);  // e.g., 1750263765
+        const value = Buffer.from(unixTime.toString(), 'utf-8').toString('base64');
 
+        // 2. Send timestamp to ESP32 via TIMESTAMP_UUID characteristic
+        await connectedDevice.writeCharacteristicWithResponseForService(
+          SERVICE_UUID,
+          TIMESTAMP_UUID,
+          value
+        );
+        console.log("Sent TIMESTAMP to ESP32:", value);
+
+        // 3. Send START command
+        const encodedStartCommand = Buffer.from("START").toString("base64");
         await connectedDevice.writeCharacteristicWithResponseForService(
           SERVICE_UUID,
           CHARACTERISTIC_COMMAND_UUID,
-          Buffer.from("START").toString("base64")  // Encode as base64
+          encodedStartCommand
         );
-
         console.log("Sent START command to ESP32");
       } catch (error) {
-        console.error("Failed to send command:", error);
+        console.error("Failed to start recording data:", error);
       }
     }
   };
