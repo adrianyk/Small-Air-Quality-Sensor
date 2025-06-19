@@ -79,7 +79,7 @@ uint32_t gpsTimer = millis();
 int32_t lon = 0;
 int32_t lat = 0;
 uint16_t gpsCount = 0;
-HardwareSerial GPS_Serial(1);
+HardwareSerial GPS_Serial(2);
 Adafruit_GPS GPS(&GPS_Serial);
 #define GPS_RX_PIN 16
 #define GPS_TX_PIN 17
@@ -186,50 +186,34 @@ void logToSDCard(const String& data) {
   }
 }
 
-void sendGPSData() {
-  if (deviceConnected) {
-    String msg;
-    //add back in, if we want date/time from gps
-    /*
-    // Time
-    msg = "T:" + String(GPS.hour) + "/"+ String(GPS.minute) + '/' + String(GPS.seconds);
-    pCharacteristic->setValue(msg.c_str());
-    pCharacteristic->notify();
-    delay(50); // Short delay between notifications
-    
-    // Date
-    msg = "D:" + String(GPS.day) + "/"+ String(GPS.month) + '/' + String(GPS.year);
-    pCharacteristic->setValue(msg.c_str());
-    pCharacteristic->notify();
-    delay(50);
-    */
-    // Location
-    msg = "la:" + String((lat/1e6)/gpsCount, 6);
-    pCharacteristic->setValue(msg.c_str());
-    pCharacteristic->notify();
-    delay(50);
-    
-    msg = "lo:" + String((lon/1e6)/gpsCount, 6);
-    pCharacteristic->setValue(msg.c_str());
-    pCharacteristic->notify();
-    delay(50);
-    
-    // Reset averages
-    lon = 0;
-    lat = 0;
-    gpsCount = 0;
-  }
-}
+
 void readGPSData() {
   char c = GPS.read();
+  Serial.println("reading gps");
+  if (GPS.newNMEAreceived()) {
+    Serial.println("new nmea");
+    if (!GPS.parse(GPS.lastNMEA())) {
+      Serial.println("processing old nmea");
+      return;
+    }
+  
+  
   if (GPS.fix) {
-    if (millis() - gpsTimer > 1000) { // Average every second
-      gpsTimer = millis();
+    Serial.println("Fix found");
+    //if (millis() - gpsTimer > 1000) { // Average every second
+      
       lon += GPS.longitudeDegrees * 1e6;
       lat += GPS.latitudeDegrees * 1e6;
       gpsCount++;
-    }
+       Serial.println(gpsCount);
+      //gpsTimer = millis();
+    //}
   }
+  else{
+    Serial.println("fix not found");
+  }
+}
+  
   return;
 }
 void setup() {
@@ -327,6 +311,8 @@ void loop() {
 
   String currentLine;
   int currentFieldIndex = 0;
+  Serial.println("gps read");
+  char c = GPS.read();
   readGPSData();
 
   if (rxValue == "START"){
@@ -382,12 +368,32 @@ void loop() {
     }
   #endif
     if (!isnan(lat) && !isnan(lon)){
-        Serial.printf("Lat: %.6f , Lon: %.6f %%\n", lat, lon);
-        unsigned long currentTimestamp = startTimestamp + readingIndex;
-        logEntry = "," + String(lat, 6) + "," + String(lon, 6);
+      Serial.println(gpsCount);
+        if (gpsCount==0){
+            Serial.println("gps count is 0");
+            Serial.printf("Lat: %.6f, Lon: %.6f\n", 0, 0);
+            logEntry += ",NA,NA";
+            lon=0;
+        lat=0;
+        gpsCount=0;
+            
+        }
+        else{
+            Serial.println("gps count is >0");
+            Serial.printf("Lat: %.6f , Lon: %.6f %%\n", lat, lon);
+            logEntry = "," + String((lat/gpsCount)/1e6, 6) + "," + String((lon/gpsCount)/1e6, 6);
+            lon=0;
+        lat=0;
+        gpsCount=0;
+        }
+        
     }
     else {
+        Serial.println("nan");
         logEntry += ",NA,NA";
+        lon=0;
+        lat=0;
+        gpsCount=0;
     }
 
     logToSDCard(logEntry);
