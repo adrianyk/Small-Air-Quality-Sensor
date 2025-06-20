@@ -186,36 +186,28 @@ void logToSDCard(const String& data) {
   }
 }
 
-
 void readGPSData() {
-  char c = GPS.read();
-  Serial.println("reading gps");
-  if (GPS.newNMEAreceived()) {
-    Serial.println("new nmea");
-    if (!GPS.parse(GPS.lastNMEA())) {
-      Serial.println("processing old nmea");
-      return;
+  while (GPS.available()) {
+    char c = GPS.read();
+    if (GPS.newNMEAreceived()) {
+      if (GPS.parse(GPS.lastNMEA())) {
+        if (GPS.fix) {
+          Serial.println("Fix found");
+          lat += GPS.latitudeDegrees * 1e6;
+          lon += GPS.longitudeDegrees * 1e6;
+          gpsCount++;
+        } else {
+          Serial.println("Fix not found");
+        }
+      } else {
+        Serial.println("Failed to parse NMEA sentence");
+      }
     }
-  
-  
-  if (GPS.fix) {
-    Serial.println("Fix found");
-    //if (millis() - gpsTimer > 1000) { // Average every second
-      
-      lon += GPS.longitudeDegrees * 1e6;
-      lat += GPS.latitudeDegrees * 1e6;
-      gpsCount++;
-       Serial.println(gpsCount);
-      //gpsTimer = millis();
-    //}
-  }
-  else{
-    Serial.println("fix not found");
   }
 }
-  
-  return;
-}
+
+
+
 void setup() {
   Serial.begin(115200);
   Wire.begin();
@@ -296,6 +288,7 @@ void setup() {
   Serial.printf("Last session number: %d\n", sessionCounter);
   // Initialize GPS
   GPS_Serial.begin(9600, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+  GPS.begin(9600);
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
   GPS.sendCommand(PGCMD_ANTENNA);
@@ -308,14 +301,19 @@ void loop() {
 
   float temp = sht31.readTemperature();
   float humidity = sht31.readHumidity();
+  char c = GPS.read();
 
   String currentLine;
   int currentFieldIndex = 0;
-  Serial.println("gps read");
-  char c = GPS.read();
-  readGPSData();
+  
+
 
   if (rxValue == "START"){
+    //feed read nmea for a second
+    for (int i=0; i<100; i++){
+      readGPSData();
+      delay(10);
+    }
     
     if (!hasStarted) {
         readingIndex = 0;
@@ -374,17 +372,17 @@ void loop() {
             Serial.printf("Lat: %.6f, Lon: %.6f\n", 0, 0);
             logEntry += ",NA,NA";
             lon=0;
-        lat=0;
-        gpsCount=0;
+          lat=0;
+          gpsCount=0;
             
         }
         else{
             Serial.println("gps count is >0");
             Serial.printf("Lat: %.6f , Lon: %.6f %%\n", lat, lon);
-            logEntry = "," + String((lat/gpsCount)/1e6, 6) + "," + String((lon/gpsCount)/1e6, 6);
+            logEntry += "," + String((lat/gpsCount)/1e6, 6) + "," + String((lon/gpsCount)/1e6, 6);
             lon=0;
-        lat=0;
-        gpsCount=0;
+            lat=0;
+            gpsCount=0;
         }
         
     }
@@ -398,7 +396,7 @@ void loop() {
 
     logToSDCard(logEntry);
     readingIndex++;
-    delay(1000);
+    //delay(1000);
   }
 
   else if (rxValue == "STOP" && !isSendingFile) {
