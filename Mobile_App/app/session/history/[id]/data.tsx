@@ -1,11 +1,12 @@
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Dimensions, StyleSheet } from 'react-native';
+import { View, SafeAreaView, Text, ScrollView, Dimensions, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
 import { expectedKeys } from '@/hooks/useBLEDataHandler';
 
 const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 
 const data = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,8 +33,11 @@ const data = () => {
 
         parsed.forEach((row) => {
           const time = row[timeIndex];
-          const label = new Date(parseInt(time) * 1000)
-            .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const parts = time.split('\n');
+          const timePart = parts[1] || parts[0]; // e.g., "14:52:08"
+          const timeParts = timePart.split(':'); // ['14', '52', '08']
+          const label = `${timeParts[0]}:${timeParts[1]}`; // '14:52'
+
           labels.push(label);
           pm1Data.push(parseFloat(row[pm1Index]));
           pm25Data.push(parseFloat(row[pm25Index]));
@@ -69,39 +73,72 @@ const data = () => {
   }, [id]);
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Session {id} Chart</Text>
-      {chartData ? (
-        <LineChart
-          data={{
-            labels: chartData.labels,
-            datasets: chartData.datasets,
-            legend: ['PM1', 'PM2.5', 'PM10'],
-          }}
-          width={screenWidth - 24}
-          height={320}
-          chartConfig={{
-            backgroundColor: '#ffffff',
-            backgroundGradientFrom: '#ffffff',
-            backgroundGradientTo: '#ffffff',
-            decimalPlaces: 1,
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            propsForDots: { r: '3', strokeWidth: '1', stroke: '#333' },
-          }}
-          bezier
-          style={styles.chart}
-        />
-      ) : (
-        <Text>Loading chart data...</Text>
-      )}
-    </ScrollView>
+    <SafeAreaView style={styles.safeArea}> 
+      <View
+        style={{
+          width: screenHeight,
+          height: screenHeight,
+          transform: [{ rotate: '90deg' }],
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingTop: 500,
+        }}
+      >
+        <ScrollView style={styles.container}>
+          <Text style={styles.title}>Session {id} Chart</Text>
+          <View style={styles.legendContainer}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: '#FF5722' }]} />
+              <Text style={styles.legendText}>PM1</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: '#2196F3' }]} />
+              <Text style={styles.legendText}>PM2.5</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
+              <Text style={styles.legendText}>PM10</Text>
+            </View>
+          </View>
+          {chartData ? (
+            <ScrollView horizontal>
+            <LineChart
+              data={{
+                labels: chartData.labels,
+                datasets: chartData.datasets,
+              }}
+              width={chartData.labels.length * 50}
+              height={320}
+              chartConfig={{
+                backgroundColor: '#ffffff',
+                backgroundGradientFrom: '#ffffff',
+                backgroundGradientTo: '#ffffff',
+                decimalPlaces: 1,
+                color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                propsForDots: { r: '3', strokeWidth: '1', stroke: '#333' },
+              }}
+              bezier
+              style={styles.chart}
+            />
+            </ScrollView>
+          ) : (
+            <Text>Loading chart data...</Text>
+          )}
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 };
 
 export default data;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingTop: 15,
+  },
   container: {
     flex: 1,
     padding: 12,
@@ -117,4 +154,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 12,
   },
+  legendContainer: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginBottom: 8,
+},
+legendItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginHorizontal: 8,
+},
+legendColor: {
+  width: 12,
+  height: 12,
+  borderRadius: 6,
+  marginRight: 4,
+},
+legendText: {
+  fontSize: 12,
+  color: '#333',
+},
 });
