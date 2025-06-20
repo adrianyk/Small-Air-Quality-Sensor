@@ -3,12 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { View, SafeAreaView, Text, ScrollView, Dimensions, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
-import { expectedKeys } from '@/hooks/useBLEDataHandler';
+import { useBLEContext } from "@/contexts/BLEContext";
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const data = () => {
+  const { expectedKeys } = useBLEContext();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [chartData, setChartData] = useState<{
     labels: string[];

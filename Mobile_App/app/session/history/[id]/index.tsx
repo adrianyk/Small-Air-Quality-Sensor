@@ -10,13 +10,15 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { expectedKeys } from '@/hooks/useBLEDataHandler';
+import expectedKeys from '@/hooks/useBLE';
+import { useBLEContext } from "@/contexts/BLEContext";
 
 const cellWidth = Dimensions.get('window').width / (expectedKeys.length + 1); // +1 for environment
 const width = 80;
 type RowWithEnv = string[]; // data + last element is environment
 
 const SessionHistoryScreen = () => {
+  const { expectedKeys } = useBLEContext();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [rows, setRows] = useState<RowWithEnv[]>([]);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
