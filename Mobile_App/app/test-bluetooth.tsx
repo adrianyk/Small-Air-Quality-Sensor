@@ -15,6 +15,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceModal from "@/components/DeviceConnectionModal";
 import { useBLEContext } from "@/contexts/BLEContext";
+import expectedKeys from "@/hooks/useBLE";
 import { router } from "expo-router";
 import Spacer from "@/components/Spacer";
 
@@ -75,9 +76,6 @@ const App = () => {
   };
 
   <View style={{ flex: 2, paddingHorizontal: 20, marginTop: 10 }}>
-  <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>
-    Recorded BLE Data:
-  </Text>
 
   {rows.length > 0 ? (
     <FlatList
@@ -102,7 +100,7 @@ const App = () => {
     } else {
       const newSessionId = `session-${Date.now()}`;
       setSessionId(newSessionId);
-      console.log("setSessionId: ", sessionId); // Note: this will print the previous sessionId cuz React state updates are async
+      console.log("setSessionId: ", sessionId)
 
       await AsyncStorage.setItem('sessionLabels', JSON.stringify({
         ...(JSON.parse(await AsyncStorage.getItem('sessionLabels') || '{}')),
@@ -112,44 +110,6 @@ const App = () => {
       startRecordingData();
       setIsRecording(true);
       console.log("toggleRecodring isRecording: ", isRecording)
-    }
-  };
-
- const debugCheckStorage = async () => {
-    try {
-      if (!sessionId) {
-        Alert.alert('Error', 'No session ID available');
-        return;
-      }
-
-      // 1. Check what's in AsyncStorage
-      const storedData = await AsyncStorage.getItem(sessionId);
-      console.log('Raw AsyncStorage data:', storedData);
-      
-      // 2. Check the parsed data
-      const parsedData = storedData ? JSON.parse(storedData) : [];
-      console.log('Parsed data:', parsedData);
-      console.log('Number of records:', parsedData.length);
-      console.log('Session ID:', sessionId);
-      // 3. Check the rows state
-      console.log('Current rows state:', rows);
-      
-      // 4. Show an alert with basic info
-      Alert.alert(
-        'Debug Info',
-        `Records in storage: ${parsedData.length}\n` +
-        `Records in state: ${rows.length}\n` +
-        `Last record: ${parsedData.length > 0 ? parsedData[parsedData.length-1].join(', ') : 'N/A'}`,
-        [{ text: 'OK' }]
-      );
-      
-      // 5. Force reload from storage
-      await loadSavedData();
-      console.log('Reloaded data from storage');
-      
-    } catch (e) {
-      console.error('Debug check failed:', e);
-      Alert.alert('Error', 'Failed to read storage data');
     }
   };
 
@@ -165,7 +125,17 @@ const App = () => {
     <SafeAreaView style={styles.container}>
       <Spacer height={20} />
       <Button title="Back to home" onPress={handleBackToHome} />
-      
+      {connectedDevice && (
+        <View style={styles.sessionNameContainer}>
+          <Text style={styles.sessionNameLabel}>Session Name:</Text>
+          <TextInput
+            placeholder="Enter session name"
+            value={sessionLabel}
+            onChangeText={setSessionLabel}
+            style={styles.sessionNameInput}
+          />
+        </View>
+      )}
       <View style={styles.heartRateTitleWrapper}>
         {connectedDevice ? (
           <>
@@ -178,41 +148,35 @@ const App = () => {
           </Text>
         )}
       </View>
-
-      <TouchableOpacity
-        onPress={debugCheckStorage}
-        style={[styles.ctaButton, { backgroundColor: '#6e48aa' }]}
-      >
-        <Text style={styles.ctaButtonText}>Debug Data</Text>
-      </TouchableOpacity>
-
+      
       <View style={styles.dataContainer}>
         <Text style={styles.sectionTitle}>Recorded BLE Data:</Text>
-        
         {rows.length > 0 ? (
-          <View style={styles.tableContainer}>
-            {/* Table Header */}
-            <View style={styles.tableRow}>
-              {expectedKeys.map((key) => (
-                <View key={key} style={styles.tableHeaderCell}>
-                  <Text style={styles.headerText}>{key}</Text>
-                </View>
-              ))}
+          <ScrollView horizontal>
+            <View style={styles.tableContainer}>
+              {/* Header */}
+              <View style={styles.tableRow}>
+                {expectedKeys.map((key) => (
+                  <View key={key} style={styles.headerCell}>
+                    <Text style={styles.headerText}>{key}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Rows */}
+              <ScrollView style={styles.tableBody}>
+                {rows.map((row, rowIndex) => (
+                  <View key={rowIndex} style={styles.tableRow}>
+                    {row.map((cell, cellIndex) => (
+                      <View key={cellIndex} style={styles.cell}>
+                        <Text style={styles.cellText}>{cell}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </ScrollView>
             </View>
-            
-            {/* Table Body */}
-            <ScrollView style={styles.tableBody}>
-              {rows.map((row, rowIndex) => (
-                <View key={rowIndex} style={styles.tableRow}>
-                  {row.map((cell, cellIndex) => (
-                    <View key={cellIndex} style={styles.tableCell}>
-                      <Text style={styles.cellText}>{cell}</Text>
-                    </View>
-                  ))}
-                </View>
-              ))}
-            </ScrollView>
-          </View>
+          </ScrollView>
         ) : (
           <Text style={styles.noDataText}>No recorded data yet.</Text>
         )}
@@ -236,21 +200,6 @@ const App = () => {
               { backgroundColor: isRecording ? "#F44336" : "#4CAF50" },
             ]}
           >
-            <View style={{ paddingHorizontal: 20, marginBottom: 10 }}>
-              <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Session Name:</Text>
-              <TextInput
-                placeholder="Enter session name"
-                value={sessionLabel}
-                onChangeText={setSessionLabel}
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#ccc',
-                  borderRadius: 5,
-                  padding: 10,
-                  backgroundColor: 'white',
-                }}
-              />
-            </View>
             <Text style={styles.ctaButtonText}>
               {isRecording ? "Stop Recording" : "Start Recording"}
               
@@ -271,7 +220,7 @@ const App = () => {
 };
 
 const windowWidth = Dimensions.get('window').width;
-const cellWidth = windowWidth / 8; // Adjust based on number of columns
+const cellWidth = windowWidth / expectedKeys.length; // Adjust based on number of columns
 
 const styles = StyleSheet.create({
   container: {
@@ -367,6 +316,41 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "white",
+  },
+  
+  sessionNameContainer: {
+  paddingHorizontal: 20,
+  marginTop: 10,
+  },
+  sessionNameLabel: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+    fontSize: 16,
+  },
+  sessionNameInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: 'white',
+  },
+
+  bottomButtons: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  headerCell: {
+    width: 80,
+    padding: 6,
+    backgroundColor: '#4CAF50',
+    alignItems: 'center',
+  },
+  cell: {
+    width: 80,
+    padding: 6,
+    alignItems: 'center',
   },
 });
 
