@@ -57,7 +57,8 @@ function useBLE(): BluetoothLowEnergyApi {
   const expectedKeys = [
     "time", "temp", "humidity",
     "pm1_std", "pm25_std", "pm10_std",
-    "pm1_env", "pm25_env", "pm10_env"
+    "pm1_env", "pm25_env", "pm10_env",
+    "lat", "lon" 
   ];
   
   useEffect(() => {

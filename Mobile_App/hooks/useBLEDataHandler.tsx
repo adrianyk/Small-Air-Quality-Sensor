@@ -4,17 +4,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const expectedKeys = [
   "time", "temp", "humidity",
   "pm1_std", "pm25_std", "pm10_std",
-  "pm1_env", "pm25_env", "pm10_env"
+  "pm1_env", "pm25_env", "pm10_env",
+  "lat", "lon" 
 ];
-
-
 
 export function useBLEDataHandler(externalSessionId: string | null) {
   const [rows, setRows] = useState<string[][]>([]);
   const storageKey = `bleData-${externalSessionId || 'default-session'}`;
   const bufferRef = useRef<Record<string, string>>({});
 
-  // Keep storageKey in a ref to avoid stale closures in callbacks
   const storageKeyRef = useRef(storageKey);
   useEffect(() => {
     storageKeyRef.current = storageKey;
@@ -29,9 +27,9 @@ export function useBLEDataHandler(externalSessionId: string | null) {
     const isComplete = expectedKeys.every(k => k in buffer);
     if (isComplete) {
       const row = expectedKeys.map(k => {
-        if (k == 'time') {
+        if (k === 'time') {
           const timestamp = parseInt(buffer[k], 10);
-          if (!isNaN(timestamp)){
+          if (!isNaN(timestamp)) {
             return new Date(timestamp * 1000)
               .toLocaleString(undefined, {
                 hour12: false,
@@ -47,6 +45,7 @@ export function useBLEDataHandler(externalSessionId: string | null) {
         }
         return buffer[k] ?? 'NA';
       });
+
       console.log("Saving row to:", storageKeyRef.current);
       setRows(prev => [...prev, row]);
 
@@ -59,11 +58,10 @@ export function useBLEDataHandler(externalSessionId: string | null) {
         console.error("Error saving row to storage:", e);
       }
 
-      bufferRef.current = {};
+      bufferRef.current = {}; // Clear buffer
     }
   }, []);
 
-  // Load saved data whenever storageKey changes
   const loadSavedData = useCallback(async () => {
     console.log("Loading data from:", storageKeyRef.current);
     try {
@@ -79,11 +77,10 @@ export function useBLEDataHandler(externalSessionId: string | null) {
     }
   }, []);
 
-  // Whenever externalSessionId changes, load stored data for the new session
   useEffect(() => {
     if (externalSessionId) {
       loadSavedData();
-      bufferRef.current = {}; // clear buffer on session change
+      bufferRef.current = {}; // Clear buffer on session change
     } else {
       setRows([]);
       bufferRef.current = {};
