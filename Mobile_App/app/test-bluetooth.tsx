@@ -12,7 +12,6 @@ import {
   TextInput,
   Button
 } from "react-native";
-import { useBLEDataHandler, expectedKeys } from '../hooks/useBLEDataHandler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceModal from "@/components/DeviceConnectionModal";
 import { useBLEContext } from "@/contexts/BLEContext";
@@ -32,24 +31,20 @@ const App = () => {
     startRecordingData,
     stopRecordingData, 
     sessionState,
-  } = useBLEContext();
-
-  const [sessionId, setSessionId] = useState<string>(() => `session-${Date.now()}`);
-
-
-  const {
     rows,
-    handleBLEField,
+    // handleBLEField,
     loadSavedData,
     clearSavedData,
-    registerSession
-  } = useBLEDataHandler(sessionId);
-
+    registerSession,
+    expectedKeys,
+    sessionId, 
+    setSessionId
+  } = useBLEContext();
+  
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [sessionLabel, setSessionLabel] = useState<string>("Untitled Session");
   const [navigating, setNavigating] = useState(false);
-
 
   useEffect(() => {
     console.log("Connected Device in screen:", connectedDevice);
@@ -99,8 +94,6 @@ const App = () => {
     )}
   </View>
   
-
-
   const toggleRecording = async () => {
     if (isRecording) {
       stopRecordingData();
@@ -109,6 +102,7 @@ const App = () => {
     } else {
       const newSessionId = `session-${Date.now()}`;
       setSessionId(newSessionId);
+      console.log("setSessionId: ", sessionId); // Note: this will print the previous sessionId cuz React state updates are async
 
       await AsyncStorage.setItem('sessionLabels', JSON.stringify({
         ...(JSON.parse(await AsyncStorage.getItem('sessionLabels') || '{}')),
@@ -120,9 +114,6 @@ const App = () => {
       console.log("toggleRecodring isRecording: ", isRecording)
     }
   };
-
-
-
 
  const debugCheckStorage = async () => {
     try {
@@ -271,7 +262,7 @@ const App = () => {
       <DeviceModal
         closeModal={hideModal}
         visible={isModalVisible}
-        connectToPeripheral={(device) => connectToDevice(device, handleBLEField)}
+        connectToPeripheral={(device) => connectToDevice(device)}
         devices={allDevices}
         refreshDevices={scanForPeripherals}
       />
