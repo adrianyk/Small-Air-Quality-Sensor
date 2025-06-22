@@ -83,6 +83,7 @@ HardwareSerial GPS_Serial(2);
 Adafruit_GPS GPS(&GPS_Serial);
 #define GPS_RX_PIN 16
 #define GPS_TX_PIN 17
+#define LED_BUILTIN 2
 
 
 const int numKeys = sizeof(csvKeys) / sizeof(csvKeys[0]);
@@ -211,6 +212,7 @@ void readGPSData() {
 void setup() {
   Serial.begin(115200);
   Wire.begin();
+  pinMode(LED_BUILTIN, OUTPUT);
   #ifdef USE_PMS5003
     PMserial.begin(PM_BAUD, SERIAL_8N1, RXD2, TXD2);
   #endif
@@ -229,9 +231,11 @@ void setup() {
   vspi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
   if (!SD.begin(SD_CS, vspi, 100000)) { // 4 MHz clock
     Serial.println("SD Card Mount Failed at 4MHz");
+    digitalWrite(LED_BUILTIN, LOW);
     return;
   }
   Serial.println("SD card initialized.");
+  digitalWrite(LED_BUILTIN, HIGH);
   void writeCSVHeader();
   // BLE setup
   BLEDevice::init("ESP32 BLE");
@@ -309,13 +313,19 @@ void loop() {
 
 
   if (rxValue == "START"){
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(100);
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(100);
+    digitalWrite(LED_BUILTIN, LOW);
     //feed read nmea for a second
-    for (int i=0; i<100; i++){
+    for (int i=0; i<196; i++){
       readGPSData();
-      delay(10);
+      delay(50);
     }
     
     if (!hasStarted) {
+        digitalWrite(LED_BUILTIN, HIGH);
         readingIndex = 0;
         sessionCounter++;
         currentSessionFile = "/session-" + String(sessionCounter) + ".csv";
@@ -395,7 +405,8 @@ void loop() {
     }
 
     logToSDCard(logEntry);
-    readingIndex++;
+    readingIndex+=10;
+    digitalWrite(LED_BUILTIN, LOW);
     //delay(1000);
   }
 
@@ -445,6 +456,7 @@ void loop() {
 
 
         if (csvFile.available() || currentLine != "") {
+          digitalWrite(LED_BUILTIN, HIGH);
           if (currentLine != "") {
             int start = 0;
             for (int i = 0; i < currentFieldIndex; i++) {
@@ -480,6 +492,7 @@ void loop() {
         } else {
           Serial.println("End of CSV file reached");
           csvFile.close();
+          digitalWrite(LED_BUILTIN, LOW);
         }
 
       } else{
