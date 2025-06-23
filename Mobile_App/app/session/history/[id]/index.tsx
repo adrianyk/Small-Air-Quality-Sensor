@@ -8,10 +8,14 @@ import {
   Dimensions,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import expectedKeys from '@/hooks/useBLE';
 import { useBLEContext } from "@/contexts/BLEContext";
+import { useAuth } from '@/contexts/AuthContext';
+import { uploadSessionToFirestore } from '@/utils/uploadSessionToFirestore';
+import Spacer from '@/components/Spacer';
 
 const cellWidth = Dimensions.get('window').width / (expectedKeys.length + 1); // +1 for environment
 const width = 80;
@@ -19,6 +23,7 @@ type RowWithEnv = string[]; // data + last element is environment
 
 const SessionHistoryScreen = () => {
   const { expectedKeys } = useBLEContext();
+  const { user } = useAuth();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [rows, setRows] = useState<RowWithEnv[]>([]);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -86,9 +91,35 @@ const SessionHistoryScreen = () => {
     setBulkEnvInput('');
   };
 
+  const handleUpload = async () => {
+    console.log('Upload button pressed');
+    Alert.alert('Debug', 'Upload triggered');
+    
+    if (!user) {
+      console.log('Upload failed, User not logged in.');
+      Alert.alert('Upload failed', 'User not logged in.');
+      return;
+    }
+    try {
+      await uploadSessionToFirestore(id, rows, user.uid, expectedKeys);
+      console.log('Success, Session data uploaded to the cloud!');
+      Alert.alert('Success', 'Session data uploaded to the cloud!');
+      // Optionally navigate or disable the button
+    } catch (e: any) {
+      console.error('Upload error:', e);
+      Alert.alert('Upload failed', 'Try again later.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Session: {id}</Text>
+
+      <Spacer height={20} />
+      <TouchableOpacity onPress={handleUpload} style={styles.uploadButton}>
+        <Text style={styles.uploadButtonText}>Upload to Cloud</Text>
+      </TouchableOpacity>
+      <Spacer height={20} />
 
       {/* Bulk input UI */}
       <View style={styles.bulkUpdateContainer}>
@@ -239,5 +270,15 @@ const styles = StyleSheet.create({
     color: '#777',
     fontStyle: 'italic',
   },
-  
+  uploadButton: {
+    marginTop: 20,
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  uploadButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },  
 });
