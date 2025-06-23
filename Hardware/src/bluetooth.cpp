@@ -7,6 +7,7 @@
 #include <SPI.h>
 #include <SD.h>
 #include <Adafruit_SHT31.h>
+#include <Adafruit_GPS.h>
 
 #include <BLEDevice.h>
 #include <BLEServer.h>
@@ -71,8 +72,19 @@ const unsigned long SEND_INTERVAL = 100;
 const char* csvKeys[] = {
   "time", "temp", "humidity",
   "pm1_std", "pm25_std", "pm10_std",
-  "pm1_env", "pm25_env", "pm10_env"
+  "pm1_env", "pm25_env", "pm10_env","lat", "lon"
 };
+//gps global variables
+uint32_t gpsTimer = millis();
+int32_t lon = 0;
+int32_t lat = 0;
+uint16_t gpsCount = 0;
+HardwareSerial GPS_Serial(2);
+Adafruit_GPS GPS(&GPS_Serial);
+#define GPS_RX_PIN 16
+#define GPS_TX_PIN 17
+#define LED_BUILTIN 2
+
 
 const int numKeys = sizeof(csvKeys) / sizeof(csvKeys[0]);
 
@@ -81,7 +93,12 @@ public:
   void onConnect(BLEServer* pServer) override {
     deviceConnected = true;
     Serial.println("BLE client connected");
-    if (pSessionStateCharacteristic) pSessionStateCharacteristic->notify();
+    if (pSessionStateCharacteristic) {
+      pSessionStateCharacteristic->setValue(hasStarted ? "BUSY" : "IDLE");
+      pSessionStateCharacteristic->notify(); 
+      Serial.print("onConnect: ");
+      Serial.println(hasStarted);
+    }
   }
 
   void onDisconnect(BLEServer* pServer) override {
@@ -113,27 +130,7 @@ public:
   }
 };
 
-
-
 SPIClass vspi(VSPI);
-
-void writeCSVHeader() {
-  File file = SD.open("/log.csv", FILE_WRITE);  // Open for write (truncates if FILE_WRITE used after removing the file)
-  if (file) {
-    file.close();  // First close in case it exists
-    SD.remove("/log.csv");  // Delete the existing file
-  }
-
-  file = SD.open("/log.csv", FILE_WRITE);  // Now open fresh file
-  if (file) {
-    file.println("timestamp,temp,humidity,pm1_std,pm25_std,pm10_std,pm1_env,pm25_env,pm10_env");
-    file.close();
-    Serial.println("CSV header written.");
-  } else {
-    Serial.println("Failed to open file to write header.");
-  }
-}
-
 
 bool readPMSData(uint16_t* pm1_std, uint16_t* pm25_std, uint16_t* pm10_std,
                  uint16_t* pm1_env, uint16_t* pm25_env, uint16_t* pm10_env) {
@@ -175,9 +172,32 @@ void logToSDCard(const String& data) {
   }
 }
 
+void readGPSData() {
+  while (GPS.available()) {
+    char c = GPS.read();
+    if (GPS.newNMEAreceived()) {
+      if (GPS.parse(GPS.lastNMEA())) {
+        if (GPS.fix) {
+         // Serial.println("Fix found");
+          lat += GPS.latitudeDegrees * 1e6;
+          lon += GPS.longitudeDegrees * 1e6;
+          gpsCount++;
+        } else {
+        //  Serial.println("Fix not found");
+        }
+      } else {
+      //  Serial.println("Failed to parse NMEA sentence");
+      }
+    }
+  }
+}
+
+
+
 void setup() {
   Serial.begin(115200);
   Wire.begin();
+  pinMode(LED_BUILTIN, OUTPUT);
   #ifdef USE_PMS5003
     PMserial.begin(PM_BAUD, SERIAL_8N1, RXD2, TXD2);
   #endif
@@ -194,12 +214,14 @@ void setup() {
 
   // VSPI bus init
   vspi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
-  if (!SD.begin(SD_CS, vspi, 100000)) { // 4 MHz clock
-    Serial.println("SD Card Mount Failed at 4MHz");
+  if (!SD.begin(SD_CS, vspi, 100000)) { 
+    Serial.println("SD Card Mount Failed at 1MHz");
+    digitalWrite(LED_BUILTIN, LOW);
     return;
   }
   Serial.println("SD card initialized.");
-  void writeCSVHeader();
+  digitalWrite(LED_BUILTIN, HIGH);
+
   // BLE setup
   BLEDevice::init("ESP32 BLE");
   pServer = BLEDevice::createServer();
@@ -245,14 +267,36 @@ void setup() {
   BLEDevice::startAdvertising();
   Serial.println("BLE Server is running...");
 
-   File root = SD.open("/");
-  while (true) {
-    String fileName = "/session-" + String(sessionCounter + 1) + ".csv";
-    if (!SD.exists(fileName)) break;
-    sessionCounter++;
+  File root = SD.open("/");
+  if (root && root.isDirectory()) {
+    while (true) {
+      File entry = root.openNextFile();
+      if (!entry) break;
+
+      String name = entry.name();  // e.g. "/session-42.csv"
+      if (name.startsWith("/")) name = name.substring(1);
+      if (name.startsWith("session-") && name.endsWith(".csv")) {
+        int numStart = name.indexOf('-') + 1;
+        int numEnd = name.indexOf(".csv");
+        String numStr = name.substring(numStart, numEnd);
+        int num = numStr.toInt();
+        if (num > sessionCounter) {
+          sessionCounter = num;
+        }
+      }
+      entry.close(); // always close after reading!
+    }
   }
 
+
   Serial.printf("Last session number: %d\n", sessionCounter);
+  // Initialize GPS
+  GPS_Serial.begin(9600, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+  GPS.begin(9600);
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  GPS.sendCommand(PGCMD_ANTENNA);
+  Serial.println("Waiting for GPS fix...");
 }
 
 void loop() {
@@ -261,35 +305,58 @@ void loop() {
 
   float temp = sht31.readTemperature();
   float humidity = sht31.readHumidity();
+  char c = GPS.read();
 
   String currentLine;
   int currentFieldIndex = 0;
+  
+
 
   if (rxValue == "START"){
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(100);
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(100);
+    digitalWrite(LED_BUILTIN, LOW);
+    //feed read nmea for a second
+    for (int i=0; i<196; i++){
+      readGPSData();
+      delay(50);
+    }
+    
     if (!hasStarted) {
+        digitalWrite(LED_BUILTIN, HIGH);
         readingIndex = 0;
         sessionCounter++;
         currentSessionFile = "/session-" + String(sessionCounter) + ".csv";
 
         File file = SD.open(currentSessionFile, FILE_WRITE);
         if (file) {
-          file.println("temp,humidity,pm1_std,pm25_std,pm10_std,pm1_env,pm25_env,pm10_env");
+          file.println("temp,humidity,pm1_std,pm25_std,pm10_std,pm1_env,pm25_env,pm10_env,lat,lon");
           file.close();
           Serial.println("Started new session: " + currentSessionFile);
         } else {
           Serial.println("Failed to create session file");
         }
 
-        hasStarted = true; 
-        pSessionStateCharacteristic->setValue(hasStarted ? "STOP" : "START");
+        hasStarted = true;
+        Serial.print("Recieved START, set hasStarted: ");
+        Serial.println(hasStarted);
+        if (deviceConnected && pSessionStateCharacteristic) {
+          pSessionStateCharacteristic->setValue("BUSY");
+          pSessionStateCharacteristic->notify();
+        }
+
       }
-    if (!isnan(temp) && !isnan(humidity)) {
+    //temp + humidity
+      if (!isnan(temp) && !isnan(humidity)) {
       Serial.printf("Temp: %.1f C, Hum: %.1f %%\n", temp, humidity);
       unsigned long currentTimestamp = startTimestamp + readingIndex;
       logEntry = String(currentTimestamp) + "," + String(temp, 1) + "," + String(humidity, 1);
     } else {
       logEntry += "NA,NA";
     }
+      
 
   #ifdef USE_PMS5003
     uint16_t pm1_std, pm25_std, pm10_std, pm1_env, pm25_env, pm10_env;
@@ -314,10 +381,39 @@ void loop() {
       logEntry += "NA,NA,NA,NA,NA,NA";
     }
   #endif
+    if (!isnan(lat) && !isnan(lon)){
+      //Serial.println(gpsCount);
+        if (gpsCount==0){
+            Serial.println("gps count is 0");
+            Serial.printf("Lat: %.6f, Lon: %.6f\n", 0, 0);
+            logEntry += ",NA,NA";
+            lon=0;
+          lat=0;
+          gpsCount=0;
+            
+        }
+        else{
+            Serial.println("gps count is >0");
+            Serial.printf("Lat: %.6f , Lon: %.6f %%\n", lat, lon);
+            logEntry += "," + String((lat/gpsCount)/1e6, 6) + "," + String((lon/gpsCount)/1e6, 6);
+            lon=0;
+            lat=0;
+            gpsCount=0;
+        }
+        
+    }
+    else {
+        Serial.println("nan");
+        logEntry += ",NA,NA";
+        lon=0;
+        lat=0;
+        gpsCount=0;
+    }
 
     logToSDCard(logEntry);
-    readingIndex++;
-    delay(1000);
+    readingIndex+=10;
+    digitalWrite(LED_BUILTIN, LOW);
+    //delay(1000);
   }
 
   else if (rxValue == "STOP" && !isSendingFile) {
@@ -327,6 +423,9 @@ void loop() {
         Serial.println("Sending latest session file: " + currentSessionFile);
         isSendingFile = true;
         lastSendTime = millis();
+        hasStarted = false;
+        Serial.print("Recieved STOP, set hasStarted: ");
+        Serial.println(hasStarted);
       } else {
         Serial.println("Failed to open " + currentSessionFile);
         rxValue.clear();
@@ -335,11 +434,6 @@ void loop() {
       Serial.println("No session file to send");
       rxValue.clear();
     }
-  }
-
-  else {
-    hasStarted = false; 
-    pSessionStateCharacteristic->setValue(hasStarted ? "STOP" : "START");
   }
 
   if(isSendingFile && deviceConnected) {
@@ -366,6 +460,7 @@ void loop() {
 
 
         if (csvFile.available() || currentLine != "") {
+          digitalWrite(LED_BUILTIN, HIGH);
           if (currentLine != "") {
             int start = 0;
             for (int i = 0; i < currentFieldIndex; i++) {
@@ -396,11 +491,20 @@ void loop() {
               rxValue.clear();
               return;
             }
+          if (!isSendingFile && !hasStarted) {
+            // Notify client that we're IDLE again
+            if (deviceConnected && pSessionStateCharacteristic) {
+              pSessionStateCharacteristic->setValue("IDLE");
+              pSessionStateCharacteristic->notify();
+              Serial.println("Session state set to IDLE.");
+            }
+          }
 
           }
         } else {
           Serial.println("End of CSV file reached");
           csvFile.close();
+          digitalWrite(LED_BUILTIN, LOW);
         }
 
       } else{
