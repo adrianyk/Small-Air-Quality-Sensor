@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
@@ -31,6 +32,7 @@ const SessionHistoryScreen = () => {
   const [rows, setRows] = useState<RowWithEnv[]>([]);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [bulkEnvInput, setBulkEnvInput] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const loadSessionData = async () => {
@@ -95,23 +97,27 @@ const SessionHistoryScreen = () => {
   };
 
   const handleUpload = async () => {
-    console.log('Upload button pressed');
-    Alert.alert('Debug', 'Upload triggered');
-    
-    if (!user) {
-      console.log('Upload failed, User not logged in.');
-      Alert.alert('Upload failed', 'User not logged in.');
-      return;
-    }
+    if (isUploading) return; // Prevent double-taps
 
-    const netInfo = await NetInfo.fetch();
-    if (!netInfo.isConnected) {
-      console.log('No internet connection');
-      Alert.alert('No Internet', 'Please connect to the internet before uploading.');
-      return;
-    }
+    setIsUploading(true);
+    console.log('Upload button pressed, uploading...');
+    // Alert.alert('Debug', 'Upload triggered');  
     
     try {
+      if (!user) {
+        console.log('Upload failed, User not logged in.');
+        Alert.alert('Upload failed', 'User not logged in.');
+        return;
+      }
+
+      // Safety net
+      const netInfo = await NetInfo.fetch();
+      if (!netInfo.isConnected) {
+        console.log('No internet connection');
+        Alert.alert('No Internet', 'Please connect to the internet before uploading.');
+        return;
+      }
+
       await uploadSessionToFirestore(id, rows, user.uid, expectedKeys);
       console.log('Success, Session data uploaded to the cloud!');
       Alert.alert('Success', 'Session data uploaded to the cloud!');
@@ -119,6 +125,9 @@ const SessionHistoryScreen = () => {
     } catch (e: any) {
       console.error('Upload error:', e);
       Alert.alert('Upload failed', 'Try again later.');
+    } finally {
+      setIsUploading(false);
+      console.log('Upload done!');
     }
   };
 
@@ -134,13 +143,20 @@ const SessionHistoryScreen = () => {
       )}
       <TouchableOpacity
         onPress={handleUpload}
+        disabled={!isOnline || isUploading}
         style={[
           styles.uploadButton,
-          { backgroundColor: isOnline ? '#4CAF50' : '#aaa' },
+          { 
+            backgroundColor: isOnline ? '#4CAF50' : '#aaa',
+            opacity: isUploading ? 0.6 : 1,
+          },
         ]}
-        disabled={!isOnline}
       >
-        <Text style={styles.uploadButtonText}>Upload to Cloud</Text>
+        {isUploading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.uploadButtonText}>Upload to Cloud</Text>
+        )}
       </TouchableOpacity>
       <Spacer height={20} />
 
