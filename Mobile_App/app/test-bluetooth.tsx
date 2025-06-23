@@ -49,10 +49,10 @@ const App = () => {
 
   useEffect(() => {
     console.log("Connected Device in screen:", connectedDevice);
-    if (sessionState === "STARTED") {
+    if (sessionState === "BUSY") {
       setIsRecording(true);
       console.log("useEffect isRecording: ", isRecording)
-    } else if (sessionState === "STOPPED") {
+    } else if (sessionState === "IDLE") {
       setIsRecording(false);
       console.log("useEffect isRecording: ", isRecording)
     }
@@ -101,16 +101,17 @@ const App = () => {
       const newSessionId = `session-${Date.now()}`;
       setSessionId(newSessionId);
       console.log("setSessionId: ", sessionId)
-
+      
       await AsyncStorage.setItem('sessionLabels', JSON.stringify({
         ...(JSON.parse(await AsyncStorage.getItem('sessionLabels') || '{}')),
         [newSessionId]: sessionLabel.trim() || "Untitled Session",
       }));
-
+      
       startRecordingData();
       setIsRecording(true);
       console.log("toggleRecodring isRecording: ", isRecording)
     }
+    console.log('toggleRecording session state: ', sessionState)
   };
 
   const handleBackToHome = () => {

@@ -19,6 +19,12 @@ const Session = () => {
                 </ThemedText>
             </Link>
 
+            <Link href='/session/map'>
+                <ThemedText className='text-center'>
+                    Map
+                </ThemedText>
+            </Link>
+
         </ThemedView>
 
 
