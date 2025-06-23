@@ -10,6 +10,7 @@ import {
   Characteristic,
   Device,
 } from "react-native-ble-plx";
+import Toast from 'react-native-toast-message';
 import { Buffer } from "buffer";
 import * as ExpoDevice from "expo-device";
 
@@ -34,6 +35,9 @@ interface BluetoothLowEnergyApi {
   startRecordingData: () => Promise<void>;
   stopRecordingData: () => Promise<void>;
   sessionState: string;
+  expectedState: "BUSY" | "IDLE" | null;
+  isTransitioning: boolean;
+  initiateSessionTransition: (target: "BUSY" | "IDLE") => void;
   rows: string[][];
   loadSavedData(): Promise<void>;
   clearSavedData(): Promise<void>;
@@ -49,8 +53,11 @@ function useBLE(): BluetoothLowEnergyApi {
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
   const [heartRate, setHeartRate] = useState("null");
-  const [sessionState, setSessionState] = useState<string>("UNKNOWN");
   const [rows, setRows] = useState<string[][]>([]);
+  const [sessionState, setSessionState] = useState<string>("UNKNOWN");
+  const [expectedState, setExpectedState] = useState<"BUSY" | "IDLE" | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const prevSessionStateRef = useRef<string>("UNKNOWN");
   const bufferRef = useRef<Record<string, string>>({});
   const storageKey = `bleData-${sessionId || 'default-session'}`;
   const storageKeyRef = useRef(storageKey);
@@ -68,6 +75,29 @@ function useBLE(): BluetoothLowEnergyApi {
   useEffect(() => {
     console.log("Connected device updated:", connectedDevice);
   }, [connectedDevice]);
+
+  useEffect(() => {
+    if (expectedState && sessionState === expectedState) {
+      setIsTransitioning(false);
+      setExpectedState(null);
+    }
+
+    // Detect transitions and show toast
+    if (prevSessionStateRef.current === "IDLE" && sessionState === "BUSY") {
+      Toast.show({ type: "success", text1: "Session started!" });
+    } else if (prevSessionStateRef.current === "BUSY" && sessionState === "IDLE") {
+      Toast.show({ type: "info", text1: "Session terminated!" });
+    }
+
+    prevSessionStateRef.current = sessionState;
+  }, [sessionState]);
+
+  const initiateSessionTransition = (target: "BUSY" | "IDLE") => {
+    setExpectedState(target);
+    console.log("next expectedState: ", target);
+    setIsTransitioning(true);
+    console.log("isTransitioning");
+  };
 
   const requestAndroid31Permissions = async () => {
     const bluetoothScanPermission = await PermissionsAndroid.request(
@@ -196,7 +226,7 @@ function useBLE(): BluetoothLowEnergyApi {
       SESSION_STATE_UUID,
       (error, characteristic) => {
         if (error) {
-          console.error("SESSION_STATE monitor error:", error);
+          console.log("SESSION_STATE monitor error:", error);
           return;
         }
         const sessionState = base64.decode(characteristic?.value ?? "");
@@ -431,6 +461,9 @@ function useBLE(): BluetoothLowEnergyApi {
     expectedKeys,
     sessionId,
     setSessionId,
+    expectedState,
+    isTransitioning,
+    initiateSessionTransition,
   };
 }
 

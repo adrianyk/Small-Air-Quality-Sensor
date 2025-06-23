@@ -10,7 +10,8 @@ import {
   Dimensions,
   Alert,
   TextInput,
-  Button
+  Button,
+  ActivityIndicator
 } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceModal from "@/components/DeviceConnectionModal";
@@ -39,7 +40,9 @@ const App = () => {
     registerSession,
     expectedKeys,
     sessionId, 
-    setSessionId
+    setSessionId,
+    isTransitioning,
+    initiateSessionTransition,
   } = useBLEContext();
   
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
@@ -83,7 +86,10 @@ const App = () => {
   </View>
   
   const toggleRecording = async () => {
+    if (isTransitioning) return;
+
     if (isRecording) {
+      initiateSessionTransition('IDLE');
       stopRecordingData();
       console.log("toggleRecodring isRecording: ", isRecording)
     } else {
@@ -96,6 +102,7 @@ const App = () => {
         [newSessionId]: sessionLabel.trim() || "Untitled Session",
       }));
       
+      initiateSessionTransition('BUSY');
       startRecordingData();
       console.log("toggleRecodring isRecording: ", isRecording)
     }
@@ -174,7 +181,11 @@ const App = () => {
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           onPress={connectedDevice ? disconnectFromDevice : openModal}
-          style={styles.ctaButton}
+          disabled={isTransitioning}
+          style={[
+            styles.ctaButton,
+            isTransitioning && { opacity: 0.5 }
+          ]}
         >
           <Text style={styles.ctaButtonText}>
             {connectedDevice ? "Disconnect" : "Connect"}
@@ -184,14 +195,20 @@ const App = () => {
         {connectedDevice && (
           <TouchableOpacity
             onPress={toggleRecording}
+            disabled={isTransitioning}
             style={[
               styles.ctaButton,
               { backgroundColor: isRecording ? "#F44336" : "#4CAF50" },
+              isTransitioning && { opacity: 0.6 }
             ]}
           >
-            <Text style={styles.ctaButtonText}>
-              {isRecording ? "Stop Recording" : "Start Recording"}
-            </Text>
+            {isTransitioning ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.ctaButtonText}>
+                {isRecording ? "Stop Recording" : "Start Recording"}
+              </Text>
+            )}
           </TouchableOpacity>
         )}
       </View>
