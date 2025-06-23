@@ -9,6 +9,7 @@ const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 const data = () => {
+  const [selectedPM, setSelectedPM] = useState<'pm1' | 'pm25' | 'pm10'>('pm25');
   const { expectedKeys } = useBLEContext();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [chartData, setChartData] = useState<{
@@ -101,12 +102,31 @@ const data = () => {
               <Text style={styles.legendText}>PM10</Text>
             </View>
           </View>
+
+          <View style={styles.buttonGroup}>
+            {['pm1', 'pm25', 'pm10'].map((pm) => (
+              <Text
+                key={pm}
+                onPress={() => setSelectedPM(pm as 'pm1' | 'pm25' | 'pm10')}
+                style={[
+                  styles.button,
+                  selectedPM === pm && styles.buttonSelected,
+                ]}
+              >
+                {pm.toUpperCase()}
+              </Text>
+            ))}
+          </View>
           {chartData ? (
-            <ScrollView horizontal>
+          <ScrollView horizontal>
             <LineChart
               data={{
                 labels: chartData.labels,
-                datasets: chartData.datasets,
+                datasets: [
+                  chartData.datasets[
+                    selectedPM === 'pm1' ? 0 : selectedPM === 'pm25' ? 1 : 2
+                  ]
+                ],
               }}
               width={chartData.labels.length * 50}
               height={320}
@@ -122,7 +142,7 @@ const data = () => {
               bezier
               style={styles.chart}
             />
-            </ScrollView>
+          </ScrollView>
           ) : (
             <Text>Loading chart data...</Text>
           )}
@@ -176,4 +196,23 @@ legendText: {
   fontSize: 12,
   color: '#333',
 },
+buttonGroup: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  marginVertical: 10,
+},
+button: {
+  paddingVertical: 6,
+  paddingHorizontal: 14,
+  marginHorizontal: 5,
+  borderRadius: 6,
+  backgroundColor: '#e0e0e0',
+  fontSize: 14,
+  color: '#000',
+},
+buttonSelected: {
+  backgroundColor: '#2196F3',
+  color: '#fff',
+},
+
 });
