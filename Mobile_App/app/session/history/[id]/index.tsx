@@ -19,6 +19,7 @@ import { useBLEContext } from "@/contexts/BLEContext";
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadSessionToFirestore } from '@/utils/uploadSessionToFirestore';
 import Spacer from '@/components/Spacer';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const cellWidth = Dimensions.get('window').width / (expectedKeys.length + 1); // +1 for environment
 const width = 80;
@@ -33,6 +34,7 @@ const SessionHistoryScreen = () => {
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [bulkEnvInput, setBulkEnvInput] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [sessionName, setSessionName] = useState<string>('Untitled Session');
 
   useEffect(() => {
     const loadSessionData = async () => {
@@ -47,6 +49,12 @@ const SessionHistoryScreen = () => {
             row.length === expectedKeys.length ? [...row, ''] : row
           );
           setRows(withEnv);
+
+          const storedSessionName = await AsyncStorage.getItem('sessionLabels');
+          if (storedSessionName) {
+            const parsedLabels = JSON.parse(storedSessionName);
+            setSessionName(parsedLabels[id] || 'Untitled Session');
+          }
         } else {
           console.warn('Parsed data is not an array');
         }
@@ -118,7 +126,14 @@ const SessionHistoryScreen = () => {
         return;
       }
 
-      await uploadSessionToFirestore(id, rows, user.uid, expectedKeys);
+      await uploadSessionToFirestore(
+        id, 
+        rows, 
+        user.uid, 
+        expectedKeys,
+        sessionName,
+        user.email ?? ''
+      );
       console.log('Success, Session data uploaded to the cloud!');
       Alert.alert('Success', 'Session data uploaded to the cloud!');
       // Optionally navigate or disable the button
@@ -132,8 +147,9 @@ const SessionHistoryScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Session: {id}</Text>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Session: {sessionName}</Text>
+      <Text className='text-center'>Session ID: {id}</Text>
 
       <Spacer height={20} />
       {!isOnline && (
@@ -217,7 +233,7 @@ const SessionHistoryScreen = () => {
     ) : (
       <Text style={styles.noData}>No data found for this session.</Text>
     )}
-    </View>
+    </SafeAreaView>
   );
 };
 
