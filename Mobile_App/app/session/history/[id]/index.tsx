@@ -11,7 +11,9 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 import expectedKeys from '@/hooks/useBLE';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useBLEContext } from "@/contexts/BLEContext";
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadSessionToFirestore } from '@/utils/uploadSessionToFirestore';
@@ -24,6 +26,7 @@ type RowWithEnv = string[]; // data + last element is environment
 const SessionHistoryScreen = () => {
   const { expectedKeys } = useBLEContext();
   const { user } = useAuth();
+  const isOnline = useNetworkStatus();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [rows, setRows] = useState<RowWithEnv[]>([]);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -100,6 +103,14 @@ const SessionHistoryScreen = () => {
       Alert.alert('Upload failed', 'User not logged in.');
       return;
     }
+
+    const netInfo = await NetInfo.fetch();
+    if (!netInfo.isConnected) {
+      console.log('No internet connection');
+      Alert.alert('No Internet', 'Please connect to the internet before uploading.');
+      return;
+    }
+    
     try {
       await uploadSessionToFirestore(id, rows, user.uid, expectedKeys);
       console.log('Success, Session data uploaded to the cloud!');
@@ -116,7 +127,19 @@ const SessionHistoryScreen = () => {
       <Text style={styles.title}>Session: {id}</Text>
 
       <Spacer height={20} />
-      <TouchableOpacity onPress={handleUpload} style={styles.uploadButton}>
+      {!isOnline && (
+        <Text style={{ color: 'red', textAlign: 'center', marginBottom: 10 }}>
+          No internet connection. Please connect to upload.
+        </Text>
+      )}
+      <TouchableOpacity
+        onPress={handleUpload}
+        style={[
+          styles.uploadButton,
+          { backgroundColor: isOnline ? '#4CAF50' : '#aaa' },
+        ]}
+        disabled={!isOnline}
+      >
         <Text style={styles.uploadButtonText}>Upload to Cloud</Text>
       </TouchableOpacity>
       <Spacer height={20} />
