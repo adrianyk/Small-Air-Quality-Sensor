@@ -2,7 +2,7 @@
 console.log("useBLE hook mounted");
 
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
-import { PermissionsAndroid, Platform } from "react-native";
+import { Alert, PermissionsAndroid, Platform } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   BleError,
@@ -139,6 +139,8 @@ function useBLE(): BluetoothLowEnergyApi {
     bleManager.startDeviceScan(null, null, (error, device) => {
       if (error) {
         console.log("scanForPeripherals: ", error);
+        const message = error instanceof Error ? error.message : String(error);
+        Alert.alert("Error scanning for peripherals", `Error: ${message}. Please try again. If issue persists, turn off and on Bluetooth.`);
       }
       // else {
       //   console.log("no errors")
@@ -178,8 +180,10 @@ function useBLE(): BluetoothLowEnergyApi {
       setSessionState(sessionStateRaw);
 
       startStreamingData(deviceConnection);   
-    } catch (e) {
-      console.log("connectToDevice: FAILED TO CONNECT", e);
+    } catch (error) {
+      console.log("connectToDevice: FAILED TO CONNECT", error);
+      const message = error instanceof Error ? error.message : String(error);
+      Alert.alert("BLE FAILED TO CONNECT", `Error: ${message}. Please try again.`);
     }
   };
 
@@ -207,7 +211,9 @@ function useBLE(): BluetoothLowEnergyApi {
         );
         console.log("Sent START command to ESP32");
       } catch (error) {
-        console.error("Failed to start recording data:", error);
+        console.error("Failed to send START command: ", error);
+        const message = error instanceof Error ? error.message : String(error);
+        Alert.alert("Failed to send START command", message);
       }
     }
   };
@@ -227,7 +233,9 @@ function useBLE(): BluetoothLowEnergyApi {
         // await startStreamingData(connectedDevice);
 
       } catch (error) {
-        console.error("Failed to send STOP command:", error);
+        console.error("Failed to send STOP command: ", error);
+        const message = error instanceof Error ? error.message : String(error);
+        Alert.alert("Failed to send STOP command", message);
       }
     }
   };
@@ -243,6 +251,8 @@ function useBLE(): BluetoothLowEnergyApi {
         bleManager.cancelDeviceConnection(connectedDevice.id);
       } catch (error) {
         console.warn("Error while disconnecting:", error);
+        const message = error instanceof Error ? error.message : String(error);
+        Alert.alert("Error disconnecting", `Error: ${message}. Please try again.`);
       } finally {
         console.log("disconnectFromDevice success: ", connectedDevice)
         setConnectedDevice(null);
@@ -320,8 +330,10 @@ function useBLE(): BluetoothLowEnergyApi {
         const parsed = stored ? JSON.parse(stored) : [];
         parsed.push(row);
         await AsyncStorage.setItem(storageKeyRef.current, JSON.stringify(parsed));
-      } catch (e) {
-        console.error("Error saving row to storage:", e);
+      } catch (error) {
+        console.error("Error saving row to storage: ", error);
+        const message = error instanceof Error ? error.message : String(error);
+        Alert.alert("Error saving data to storage", message);
       }
 
       bufferRef.current = {};
@@ -338,8 +350,10 @@ function useBLE(): BluetoothLowEnergyApi {
       } else {
         setRows([]);
       }
-    } catch (e) {
-      console.error("Failed to load saved data:", e);
+    } catch (error) {
+      console.error("Failed to load saved data:", error);
+      const message = error instanceof Error ? error.message : String(error);
+      Alert.alert("Failed to load saved data", message);
     }
   }, []);
 
@@ -348,8 +362,10 @@ function useBLE(): BluetoothLowEnergyApi {
       await AsyncStorage.removeItem(storageKeyRef.current);
       setRows([]);
       bufferRef.current = {};
-    } catch (e) {
-      console.error("Failed to clear data:", e);
+    } catch (error) {
+      console.error("Failed to clear data: ", error);
+      const message = error instanceof Error ? error.message : String(error);
+      Alert.alert("Failed to clear data", message);
     }
   }, []);
 
@@ -360,8 +376,10 @@ function useBLE(): BluetoothLowEnergyApi {
       const parsed = all ? JSON.parse(all) : {};
       parsed[sessionId] = label;
       await AsyncStorage.setItem('sessionLabels', JSON.stringify(parsed));
-    } catch (e) {
-      console.error("Failed to register session label:", e);
+    } catch (error) {
+      console.error("Failed to register session label:", error);
+      const message = error instanceof Error ? error.message : String(error);
+      Alert.alert("Failed to register session label", message);
     }
   }, [sessionId]);
 
