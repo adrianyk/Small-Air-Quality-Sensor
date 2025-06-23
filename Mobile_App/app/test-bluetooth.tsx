@@ -43,20 +43,10 @@ const App = () => {
   } = useBLEContext();
   
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-  const [isRecording, setIsRecording] = useState<boolean>(false);
   const [sessionLabel, setSessionLabel] = useState<string>("Untitled Session");
   const [navigating, setNavigating] = useState(false);
 
-  useEffect(() => {
-    console.log("Connected Device in screen:", connectedDevice);
-    if (sessionState === "BUSY") {
-      setIsRecording(true);
-      console.log("useEffect isRecording: ", isRecording)
-    } else if (sessionState === "IDLE") {
-      setIsRecording(false);
-      console.log("useEffect isRecording: ", isRecording)
-    }
-  }, [sessionState]);
+  const isRecording = sessionState === 'BUSY';
 
   const scanForDevices = async () => {
     const isPermissionsEnabled = await requestPermissions();
@@ -95,7 +85,6 @@ const App = () => {
   const toggleRecording = async () => {
     if (isRecording) {
       stopRecordingData();
-      setIsRecording(false);
       console.log("toggleRecodring isRecording: ", isRecording)
     } else {
       const newSessionId = `session-${Date.now()}`;
@@ -108,7 +97,6 @@ const App = () => {
       }));
       
       startRecordingData();
-      setIsRecording(true);
       console.log("toggleRecodring isRecording: ", isRecording)
     }
     console.log('toggleRecording session state: ', sessionState)
@@ -203,7 +191,6 @@ const App = () => {
           >
             <Text style={styles.ctaButtonText}>
               {isRecording ? "Stop Recording" : "Start Recording"}
-              
             </Text>
           </TouchableOpacity>
         )}

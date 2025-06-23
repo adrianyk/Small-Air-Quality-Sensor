@@ -170,14 +170,17 @@ function useBLE(): BluetoothLowEnergyApi {
       await deviceConnection.discoverAllServicesAndCharacteristics();
       bleManager.stopDeviceScan();
 
-      // Read SESSION_STATE on connection
+      // Read SESSION_STATE once on connect for immediate value
       const sessionStateChar = await deviceConnection.readCharacteristicForService(
         SERVICE_UUID,
         SESSION_STATE_UUID
       );
-      const sessionStateRaw = base64.decode(sessionStateChar.value ?? "");
-      console.log("SESSION_STATE:", sessionStateRaw);
-      setSessionState(sessionStateRaw);
+      const initialSessionState = base64.decode(sessionStateChar.value ?? "");
+      console.log("Initial SESSION_STATE: ", initialSessionState);
+      setSessionState(initialSessionState);
+
+      // Monitor session state for ongoing changes
+      monitorSessionState(deviceConnection);
 
       startStreamingData(deviceConnection);   
     } catch (error) {
@@ -185,6 +188,22 @@ function useBLE(): BluetoothLowEnergyApi {
       const message = error instanceof Error ? error.message : String(error);
       Alert.alert("BLE FAILED TO CONNECT", `Error: ${message}. Please try again.`);
     }
+  };
+
+  const monitorSessionState = (device: Device) => {
+    device.monitorCharacteristicForService(
+      SERVICE_UUID,
+      SESSION_STATE_UUID,
+      (error, characteristic) => {
+        if (error) {
+          console.error("SESSION_STATE monitor error:", error);
+          return;
+        }
+        const sessionState = base64.decode(characteristic?.value ?? "");
+        console.log("SESSION_STATE updated:", sessionState);
+        setSessionState(sessionState);
+      }
+    );
   };
 
   const startRecordingData = async () => {
