@@ -4,7 +4,9 @@ export const uploadSessionToFirestore = async (
   sessionId: string,
   data: string[][],
   userId: string,
-  expectedKeys: string[]
+  expectedKeys: string[],
+  sessionLabel: string,
+  userEmail: string
 ) => {
   if (!userId) {
     console.error('Upload error: No user ID provided');
@@ -30,6 +32,8 @@ export const uploadSessionToFirestore = async (
 
   await sessionRef.set({
     id: sessionId,
+    label: sessionLabel,
+    userEmail: userEmail,
     lastUpdated: firestore.FieldValue.serverTimestamp(),
     data: formattedData,
   });
