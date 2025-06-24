@@ -20,53 +20,77 @@ const PastSessionList = () => {
 
   const { user } = useAuth();
 
+  type SessionMeta = {
+    label: string;
+    lastUpdated: number;
+  };
+
   const fetchSessions = useCallback(async () => {
-    try {
-      if (!user?.uid) {
-        setSessions({});
-        return;
-      }
-
-      const storedLabels = await AsyncStorage.getItem('sessionLabels');
-      const storedUserIds = await AsyncStorage.getItem('sessionUserIds');
-
-      const localLabels: SessionLabels = storedLabels ? JSON.parse(storedLabels) : {};
-      const userIds: Record<string, string> = storedUserIds ? JSON.parse(storedUserIds) : {};
-
-      // Filter local sessions by user ID
-      const localFiltered: SessionLabels = {};
-      for (const [id, label] of Object.entries(localLabels)) {
-        if (userIds[id] === user.uid) {
-          localFiltered[id] = label;
-        }
-      }
-
-      // Fetch sessions from Firebase
-      const snapshot = await firestore()
-        .collection('users')
-        .doc(user.uid)
-        .collection('sessions')
-        .get();
-
-      const cloudSessions: SessionLabels = {};
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const label = data.label || 'Unnamed Session';
-        cloudSessions[doc.id] = label;
-      });
-
-      // Merge local and cloud sessions (cloud wins if conflict)
-      const mergedSessions: SessionLabels = {
-        ...localFiltered,
-        ...cloudSessions,
-      };
-
-      setSessions(mergedSessions);
-    } catch (e) {
-      console.error('Failed to load session labels:', e);
+  try {
+    if (!user?.uid) {
       setSessions({});
+      return;
     }
-  }, [user?.uid]);
+
+    const storedLabelsRaw = await AsyncStorage.getItem('sessionLabels');
+    const storedUserIdsRaw = await AsyncStorage.getItem('sessionUserIds');
+
+    const localLabels: Record<string, string> = storedLabelsRaw ? JSON.parse(storedLabelsRaw) : {};
+    const userIds: Record<string, string> = storedUserIdsRaw ? JSON.parse(storedUserIdsRaw) : {};
+
+    // Prepare local sessions with label + lastUpdated
+    const localSessions: Record<string, SessionMeta> = {};
+
+    for (const [id, label] of Object.entries(localLabels)) {
+      if (userIds[id] === user.uid) {
+        // Read lastUpdated for each local session
+        const lastUpdatedRaw = await AsyncStorage.getItem(`lastUpdated-${id}`);
+        const lastUpdatedObj = lastUpdatedRaw ? JSON.parse(lastUpdatedRaw) : null;
+        const lastUpdated = lastUpdatedObj?.timestamp || 0;
+        localSessions[id] = { label, lastUpdated };
+      }
+    }
+
+    // Fetch cloud sessions
+    const snapshot = await firestore()
+      .collection('users')
+      .doc(user.uid)
+      .collection('sessions')
+      .get();
+
+    const cloudSessions: Record<string, SessionMeta> = {};
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      cloudSessions[doc.id] = {
+        label: data.label || 'Unnamed Session',
+        lastUpdated: data.lastUpdated || 0,
+      };
+    });
+
+    // Merge sessions by picking the latest lastUpdated
+    const mergedSessions: Record<string, string> = {};
+    const allSessionIds = new Set([...Object.keys(localSessions), ...Object.keys(cloudSessions)]);
+
+    allSessionIds.forEach(id => {
+      const localSession = localSessions[id];
+      const cloudSession = cloudSessions[id];
+
+      if ((cloudSession?.lastUpdated ?? 0) >= (localSession?.lastUpdated ?? 0)) {
+        console.log('Cloud')
+        mergedSessions[id] = cloudSession?.label ?? 'Unnamed Session';
+      } else {
+        console.log('async')
+        mergedSessions[id] = localSession?.label ?? 'Unnamed Session';
+      }
+    });
+
+    setSessions(mergedSessions);
+  } catch (e) {
+    console.error('Failed to load session labels:', e);
+    setSessions({});
+  }
+}, [user?.uid]);
+
 
   useFocusEffect(
     useCallback(() => {
