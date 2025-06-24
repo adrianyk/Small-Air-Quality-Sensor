@@ -92,6 +92,9 @@ export default function Index() {
         <Spacer height={20} />
         <Button title="Fetch Dummy Data" onPress={fetchDummyData} />
 
+        <Spacer height={20} />
+        <Button title="View AsyncStorage" onPress={() => router.push('/debug-asyncstorage')} />
+
         <View className="flex-1 mt-5">
           <SearchBar 
             onPress={() => router.push("/session")} // redirect to the `/session` screen
