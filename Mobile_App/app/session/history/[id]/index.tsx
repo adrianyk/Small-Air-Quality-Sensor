@@ -20,6 +20,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { uploadSessionToFirestore } from '@/utils/uploadSessionToFirestore';
 import Spacer from '@/components/Spacer';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import firestore from '@react-native-firebase/firestore';
+
 
 const cellWidth = Dimensions.get('window').width / (expectedKeys.length + 1); // +1 for environment
 const width = 80;
@@ -40,7 +42,14 @@ const SessionHistoryScreen = () => {
     const loadSessionData = async () => {
       try {
         const storageKey = `bleData-${id}`;
-        const stored = await AsyncStorage.getItem(storageKey);
+        let stored = await AsyncStorage.getItem(storageKey);
+
+        // If local session is missing, try loading from cloud
+        if (!stored) {
+          console.log(`No local data for ${id}, trying cloud...`);
+          await loadSessionDataFromCloud();
+          return;
+        }
         const parsed: string[][] = stored ? JSON.parse(stored) : [];
 
         if (Array.isArray(parsed)) {
@@ -65,6 +74,52 @@ const SessionHistoryScreen = () => {
 
     loadSessionData();
   }, [id]);
+
+  const loadSessionDataFromCloud = async () => {
+    try {
+      if (!user?.uid) return;
+
+      const doc = await firestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('sessions')
+        .doc(id)
+        .get();
+
+      if (!doc.exists) {
+        console.warn(`No session found in cloud for id: ${id}`);
+        return;
+      }
+
+      const data = doc.data();
+
+      const cloudRows: string[][] = Array.isArray(data?.data)
+      ? data.data.map((entry: Record<string, any>) =>
+          expectedKeys.map((key) => String(entry[key] ?? '')).concat(entry.environment ?? '')
+        )
+      : [];
+      const cloudLabel: string = data?.label ?? 'Untitled Session';
+
+      if (Array.isArray(cloudRows)) {
+        const withEnv = cloudRows.map((row) =>
+          row.length === expectedKeys.length ? [...row, ''] : row
+        );
+        setRows(withEnv);
+        setSessionName(cloudLabel);
+
+        // Also update local label store
+        const labelStoreRaw = await AsyncStorage.getItem('sessionLabels');
+        const labelStore = labelStoreRaw ? JSON.parse(labelStoreRaw) : {};
+        labelStore[id] = cloudLabel;
+        await AsyncStorage.setItem('sessionLabels', JSON.stringify(labelStore));
+      } else {
+        console.warn('Cloud data is not a valid array');
+      }
+    } catch (e) {
+      console.error('Failed to load session from cloud:', e);
+    }
+  };
+
 
   const updateEnvironment = async (rowIndex: number, value: string) => {
     const updatedRows = [...rows];
