@@ -4,21 +4,20 @@ import { View, SafeAreaView, Text, ScrollView, Dimensions, StyleSheet } from 're
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
 import { useBLEContext } from "@/contexts/BLEContext";
+
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
+
 const data = () => {
+
   const [selectedPM, setSelectedPM] = useState<'pm1' | 'pm25' | 'pm10'>('pm25');
   const { expectedKeys } = useBLEContext();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [environments, setEnvironments] = useState<string[]>([]);
-  const [selectedEnvironment, setSelectedEnvironment] = useState<string | null>(null);
   const [chartData, setChartData] = useState<{
     labels: string[];
     datasets: { data: number[]; color: () => string; strokeWidth: number }[];
-    environments: string[]; 
   } | null>(null);
-
 
   useEffect(() => {
     const loadData = async () => {
@@ -31,53 +30,46 @@ const data = () => {
         const pm25Index = expectedKeys.indexOf('pm25_std');
         const pm10Index = expectedKeys.indexOf('pm10_std');
         const envIndex = expectedKeys.length;
-        const foundEnvs = new Set<string>();
-
-        const filteredPM1: number[] = [];
-        const filteredPM25: number[] = [];
-        const filteredPM10: number[] = [];
-        const environmentsFromData: string[] = [];
+        
+        const labels: string[] = [];
+        const pm1Data: number[] = [];
+        const pm25Data: number[] = [];
+        const pm10Data: number[] = [];
 
         parsed.forEach((row) => {
-          const env = row[envIndex] || 'unknown';
-          foundEnvs.add(env);
-          environmentsFromData.push(env);
-
           const time = row[timeIndex];
           const parts = time.split('\n');
           const timePart = parts[1] || parts[0]; // e.g., "14:52:08"
           const timeParts = timePart.split(':'); // ['14', '52', '08']
-          const label = `${timeParts[0]}:${timeParts[1]}`; // '14:52'
+          const timeLabel = `${timeParts[0]}:${timeParts[1]}`; // '14:52'
+          const env = row[envIndex] || 'unknown';
 
-          filteredLabels.push(label);
-          filteredPM1.push(parseFloat(row[pm1Index]));
-          filteredPM25.push(parseFloat(row[pm25Index]));
-          filteredPM10.push(parseFloat(row[pm10Index]));
+          labels.push(`${timeLabel}\n(${env})`);
+          pm1Data.push(parseFloat(row[pm1Index]));
+          pm25Data.push(parseFloat(row[pm25Index]));
+          pm10Data.push(parseFloat(row[pm10Index]));
         });
 
-        setEnvironments(Array.from(foundEnvs));
-
-      setChartData({
-        labels: filteredLabels,
-        datasets: [
-          {
-            data: filteredPM1,
-            color: () => '#FF5722',
-            strokeWidth: 2,
-          },
-          {
-            data: filteredPM25,
-            color: () => '#2196F3',
-            strokeWidth: 2,
-          },
-          {
-            data: filteredPM10,
-            color: () => '#4CAF50',
-            strokeWidth: 2,
-          },
-        ],
-        environments: environmentsFromData, // save per point
-      });
+        setChartData({
+          labels,
+          datasets: [
+            {
+              data: pm1Data,
+              color: () => '#FF5722',
+              strokeWidth: 2,
+            },
+            {
+              data: pm25Data,
+              color: () => '#2196F3',
+              strokeWidth: 2,
+            },
+            {
+              data: pm10Data,
+              color: () => '#4CAF50',
+              strokeWidth: 2,
+            },
+          ],
+        });
       } catch (e) {
         console.error('Failed to load chart data:', e);
       }
@@ -85,21 +77,6 @@ const data = () => {
 
     if (id) loadData();
   }, [id]);
-
-  let filteredLabels: string[] = [];
-  let filteredData: number[] = [];
-
-  if (chartData) {
-    filteredLabels = chartData.labels;
-
-    const selectedDatasetIndex = selectedPM === 'pm1' ? 0 : selectedPM === 'pm25' ? 1 : 2;
-    filteredData = chartData.datasets[selectedDatasetIndex].data.map((value, i) =>
-      selectedEnvironment === null || chartData.environments[i] === selectedEnvironment
-        ? value
-        : 0
-    );
-  }
-
 
   return (
     <SafeAreaView style={styles.safeArea}> 
@@ -130,42 +107,36 @@ const data = () => {
             </View>
           </View>
 
+
           <View style={styles.buttonGroup}>
             {['pm1', 'pm25', 'pm10'].map((pm) => (
               <Text
                 key={pm}
+
                 onPress={() => setSelectedPM(pm as 'pm1' | 'pm25' | 'pm10')}
                 style={[
                   styles.button,
+
                   selectedPM === pm && styles.buttonSelected,
                 ]}
               >
                 {pm.toUpperCase()}
               </Text>
-            ))}
-          </View>
-          <View style={styles.buttonGroup}>
-            {environments.map((env) => (
-              <Text
-                key={env}
-                onPress={() => setSelectedEnvironment(env === selectedEnvironment ? null : env)}
-                style={[
-                  styles.button,
-                  selectedEnvironment === env && styles.buttonSelected,
-                ]}
-              >
-                {env.toUpperCase()}
-              </Text>
+
             ))}
           </View>
           {chartData ? (
           <ScrollView horizontal>
             <LineChart
               data={{
-                labels: filteredLabels,
-                datasets: [{ data: filteredData }],
+                labels: chartData.labels,
+                datasets: [
+                  chartData.datasets[
+                    selectedPM === 'pm1' ? 0 : selectedPM === 'pm25' ? 1 : 2
+                  ]
+                ],
               }}
-              width={chartData.labels.length * 50}
+              width={chartData.labels.length * 100}
               height={320}
               chartConfig={{
                 backgroundColor: '#ffffff',
@@ -188,6 +159,7 @@ const data = () => {
     </SafeAreaView>
   );
 };
+
 
 export default data;
 
@@ -217,39 +189,39 @@ const styles = StyleSheet.create({
   justifyContent: 'center',
   alignItems: 'center',
   marginBottom: 8,
-},
-legendItem: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginHorizontal: 8,
-},
-legendColor: {
-  width: 12,
-  height: 12,
-  borderRadius: 6,
-  marginRight: 4,
-},
-legendText: {
-  fontSize: 12,
-  color: '#333',
-},
-buttonGroup: {
-  flexDirection: 'row',
-  justifyContent: 'center',
-  marginVertical: 10,
-},
-button: {
-  paddingVertical: 6,
-  paddingHorizontal: 14,
-  marginHorizontal: 5,
-  borderRadius: 6,
-  backgroundColor: '#e0e0e0',
-  fontSize: 14,
-  color: '#000',
-},
-buttonSelected: {
-  backgroundColor: '#2196F3',
-  color: '#fff',
-},
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 8,
+  },
+  legendColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 4,
+  },
+  legendText: {
+    fontSize: 12,
+    color: '#333',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  button: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    marginHorizontal: 5,
+    borderRadius: 6,
+    backgroundColor: '#e0e0e0',
+    fontSize: 14,
+    color: '#000',
+  },
+  buttonSelected: {
+    backgroundColor: '#2196F3',
+    color: '#fff',
+  },
 
 });

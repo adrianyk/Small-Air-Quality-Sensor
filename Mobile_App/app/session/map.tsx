@@ -1,30 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Dimensions } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Circle } from 'react-native-maps';
 import { getDistance } from 'geolib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const RADIUS_METERS = 10;
+const RADIUS_METERS = 14;
 
 const calculateAverage = (points: { lat: number, lon: number, value: number }[]) => {
   const clusters = [];
-  const visited = new Set();
+  const visited = new Set<number>();
 
   for (let i = 0; i < points.length; i++) {
     if (visited.has(i)) continue;
 
-    const cluster = [points[i]];
-    visited.add(i);
+    const queue = [i];
+    const cluster = [];
 
-    for (let j = i + 1; j < points.length; j++) {
-      const dist = getDistance(
-        { latitude: points[i].lat, longitude: points[i].lon },
-        { latitude: points[j].lat, longitude: points[j].lon }
-      );
+    while (queue.length > 0) {
+      const idx = queue.pop()!;
+      if (visited.has(idx)) continue;
 
-      if (dist <= RADIUS_METERS) {
-        cluster.push(points[j]);
-        visited.add(j);
+      visited.add(idx);
+      cluster.push(points[idx]);
+
+      for (let j = 0; j < points.length; j++) {
+        if (visited.has(j)) continue;
+
+        const dist = getDistance(
+          { latitude: points[idx].lat, longitude: points[idx].lon },
+          { latitude: points[j].lat, longitude: points[j].lon }
+        );
+
+        if (dist <= RADIUS_METERS) {
+          queue.push(j);
+        }
       }
     }
 
@@ -37,6 +46,7 @@ const calculateAverage = (points: { lat: number, lon: number, value: number }[])
 
   return clusters;
 };
+
 
 const MapScreen = () => {
   const [clusters, setClusters] = useState<{ lat: number; lon: number; avg: number }[]>([]);
@@ -83,15 +93,28 @@ const MapScreen = () => {
           longitudeDelta: 0.05,
         }}
       >
-        {clusters.map((c, index) => (
-          <Marker
-            key={index}
-            coordinate={{ latitude: c.lat, longitude: c.lon }}
-            title={`PM2.5: ${c.avg.toFixed(1)}`}
-            description={`Avg in ${RADIUS_METERS}m radius`}
-            pinColor={c.avg > 35 ? 'red' : c.avg > 15 ? 'orange' : 'green'}
-          />
-        ))}
+        {clusters.map((c, index) => {
+          const color =
+            c.avg > 35 ? 'rgba(255,0,0,0.3)' :
+            c.avg > 15 ? 'rgba(255,165,0,0.3)' :
+            'rgba(0,128,0,0.3)'; // red, orange, green with fade
+
+          const stroke =
+            c.avg > 35 ? 'rgba(255,0,0,0.6)' :
+            c.avg > 15 ? 'rgba(255,165,0,0.6)' :
+            'rgba(0,128,0,0.6)';
+
+          return (
+            <Circle
+              key={index}
+              center={{ latitude: c.lat, longitude: c.lon }}
+              radius={25} // meters, adjust for size
+              fillColor={color}
+              strokeColor={stroke}
+              strokeWidth={1}
+            />
+          );
+        })}
       </MapView>
     </View>
   );
