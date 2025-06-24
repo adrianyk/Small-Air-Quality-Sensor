@@ -7,9 +7,15 @@ export const deleteSession = async (sessionId: string) => {
 
     // Remove the label from sessionLabels
     const labels = await AsyncStorage.getItem('sessionLabels');
-    const parsed = labels ? JSON.parse(labels) : {};
-    delete parsed[sessionId];
-    await AsyncStorage.setItem('sessionLabels', JSON.stringify(parsed));
+    const parsedLabels = labels ? JSON.parse(labels) : {};
+    delete parsedLabels[sessionId];
+    await AsyncStorage.setItem('sessionLabels', JSON.stringify(parsedLabels));
+
+    // Remove from sessionUserIds
+    const userIds = await AsyncStorage.getItem('sessionUserIds');
+    const parsedUserIds = userIds ? JSON.parse(userIds) : {};
+    delete parsedUserIds[sessionId];
+    await AsyncStorage.setItem('sessionUserIds', JSON.stringify(parsedUserIds));
 
     console.log(`Deleted session: ${sessionId}`);
   } catch (e) {
