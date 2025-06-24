@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import Spacer from '@/components/Spacer';
 import { deleteSession } from '@/utils/storage';
 import { Feather } from '@expo/vector-icons';
+import { useAuth } from '@/contexts/AuthContext';
 
 type SessionLabels = Record<string, string>;
 
@@ -16,19 +17,33 @@ const PastSessionList = () => {
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
+  const { user } = useAuth();
+
   const fetchSessions = useCallback(async () => {
     try {
-      const stored = await AsyncStorage.getItem('sessionLabels');
-      if (stored) {
-        const parsed: SessionLabels = JSON.parse(stored);
-        setSessions(parsed);
-      } else {
+      const storedLabels = await AsyncStorage.getItem('sessionLabels');
+      const storedUserIds = await AsyncStorage.getItem('sessionUserIds');
+
+      if (!storedLabels || !storedUserIds || !user?.uid) {
         setSessions({});
+        return;
       }
+
+      const labels: SessionLabels = JSON.parse(storedLabels);
+      const userIds: Record<string, string> = JSON.parse(storedUserIds);
+
+      const filtered: SessionLabels = {};
+      for (const [id, label] of Object.entries(labels)) {
+        if (userIds[id] === user.uid) {
+          filtered[id] = label;
+        }
+      }
+
+      setSessions(filtered);
     } catch (e) {
       console.error('Failed to load session labels:', e);
     }
-  }, []);
+  }, [user?.uid]);
 
   useFocusEffect(
     useCallback(() => {

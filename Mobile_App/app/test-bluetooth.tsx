@@ -19,6 +19,7 @@ import { useBLEContext } from "@/contexts/BLEContext";
 import expectedKeys from "@/hooks/useBLE";
 import { router } from "expo-router";
 import Spacer from "@/components/Spacer";
+import { useAuth } from '@/contexts/AuthContext';
 
 const App = () => {
   const {
@@ -48,6 +49,7 @@ const App = () => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [sessionLabel, setSessionLabel] = useState<string>("Untitled Session");
   const [navigating, setNavigating] = useState(false);
+  const { user } = useAuth();
 
   const isRecording = sessionState === 'BUSY';
 
@@ -101,6 +103,14 @@ const App = () => {
         ...(JSON.parse(await AsyncStorage.getItem('sessionLabels') || '{}')),
         [newSessionId]: sessionLabel.trim() || "Untitled Session",
       }));
+
+      if (user?.uid) { 
+        const existingUserIds = JSON.parse(await AsyncStorage.getItem('sessionUserIds') || '{}');
+        await AsyncStorage.setItem('sessionUserIds', JSON.stringify({
+          ...existingUserIds,
+          [newSessionId]: user.uid,
+        }));
+      }
       
       initiateSessionTransition('BUSY');
       startRecordingData();
