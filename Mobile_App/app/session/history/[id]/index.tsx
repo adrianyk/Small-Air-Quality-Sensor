@@ -74,6 +74,14 @@ const SessionHistoryScreen = () => {
 
     try {
       await AsyncStorage.setItem(`bleData-${id}`, JSON.stringify(updatedRows));
+
+      const timestamp = Date.now();
+      const localTime = new Date(timestamp).toLocaleString();
+      await AsyncStorage.setItem(`lastUpdated-${id}`, JSON.stringify({
+        timestamp: timestamp,     // for comparison
+        localTime: localTime          // for readable display
+      }));
+      console.log(`updateEnvironment: Stored timestamp for ${id}`)
     } catch (e) {
       console.error('Failed to save updated row:', e);
     }
@@ -98,6 +106,14 @@ const SessionHistoryScreen = () => {
 
     try {
       await AsyncStorage.setItem(`bleData-${id}`, JSON.stringify(updatedRows));
+
+      const timestamp = Date.now();
+      const localTime = new Date(timestamp).toLocaleString();
+      await AsyncStorage.setItem(`lastUpdated-${id}`, JSON.stringify({
+        timestamp: timestamp,
+        localTime: localTime
+      }));
+      console.log(`applyBulkEnvironment: Stored timestamp for ${id}`)
     } catch (e) {
       console.error('Failed to save bulk update:', e);
     }

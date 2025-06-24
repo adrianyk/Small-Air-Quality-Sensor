@@ -61,6 +61,7 @@ function useBLE(): BluetoothLowEnergyApi {
   const bufferRef = useRef<Record<string, string>>({});
   const storageKey = `bleData-${sessionId || 'default-session'}`;
   const storageKeyRef = useRef(storageKey);
+  const lastUpdatedKeyRef = useRef(`lastUpdated-${sessionId || 'default-session'}`);
   const expectedKeys = [
     "time", "temp", "humidity",
     "pm1_std", "pm25_std", "pm10_std",
@@ -70,6 +71,10 @@ function useBLE(): BluetoothLowEnergyApi {
   
   useEffect(() => {
     storageKeyRef.current = `bleData-${sessionId || 'default-session'}`;
+  }, [sessionId]);
+
+  useEffect(() => {
+    lastUpdatedKeyRef.current = `lastUpdated-${sessionId || 'default-session'}`;
   }, [sessionId]);
 
   useEffect(() => {
@@ -379,6 +384,14 @@ function useBLE(): BluetoothLowEnergyApi {
         const parsed = stored ? JSON.parse(stored) : [];
         parsed.push(row);
         await AsyncStorage.setItem(storageKeyRef.current, JSON.stringify(parsed));
+        
+        const timestamp = Date.now();
+        const localTime = new Date(timestamp).toLocaleString();
+        await AsyncStorage.setItem(lastUpdatedKeyRef.current, JSON.stringify({
+          timestamp: timestamp,
+          localTime: localTime
+        }));
+
       } catch (error) {
         console.error("Error saving row to storage: ", error);
         const message = error instanceof Error ? error.message : String(error);
