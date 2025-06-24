@@ -9,6 +9,7 @@ export const uploadSessionToFirestore = async (
   userEmail: string,
   localLastUpdated: { timestamp: number; localTime: string }
 ) => {
+  console.log("🔥 uploadSessionToFirestore started");
   if (!userId) {
     console.error('Upload error: No user ID provided');
     throw new Error('No user ID provided.');
@@ -24,19 +25,49 @@ export const uploadSessionToFirestore = async (
     obj['environment'] = row[expectedKeys.length] || '';
     return obj;
   });
+  console.log("📦 Formatted session data:", formattedData.length, "rows");
 
-  const sessionRef = firestore()
-    .collection('users')
-    .doc(userId)
-    .collection('sessions')
-    .doc(sessionId);
-
-  await sessionRef.set({
+  const sessionDoc = {
     id: sessionId,
     label: sessionLabel,
     userEmail: userEmail,
     data: formattedData,
     lastUpdated: localLastUpdated.timestamp,
     lastUpdatedIso: localLastUpdated.localTime,
-  });
+  };
+
+  // 1. Upload to private user-specific path
+  const userSessionRef = firestore()
+    .collection('users')
+    .doc(userId)
+    .collection('sessions')
+    .doc(sessionId);
+
+  await userSessionRef.set(sessionDoc);
+  console.log('✅ Uploaded to user session path:', userSessionRef.path)
+  // try {
+  //   await userSessionRef.set(sessionDoc);
+  //   console.log("✅ Uploaded to user session path:", userSessionRef.path);
+  // } catch (err) {
+  //   console.error("❌ Error writing to user session path:", err);
+  // }
+
+  // 2. Upload to publicSessions (without/desrtuctured/removed userEmail)
+  const { userEmail: _, ...publicSessionDoc } = sessionDoc;
+
+  const publicSessionRef = firestore()
+    .collection('publicSessions')
+    .doc(sessionId);
+
+  await publicSessionRef.set(publicSessionDoc);
+  console.log('✅ Uploaded to publicSessions:', publicSessionRef.path);
+  console.log('📦 Public session data:', publicSessionDoc);
+  // try {
+  //   await publicSessionRef.set(publicSessionDoc);
+  //   console.log("✅ Uploaded to publicSessions:", publicSessionRef.path);
+  // } catch (err) {
+  //   console.error("❌ Error writing to publicSessions:", err);
+  // }
+
+  console.log("🏁 uploadSessionToFirestore finished");
 };

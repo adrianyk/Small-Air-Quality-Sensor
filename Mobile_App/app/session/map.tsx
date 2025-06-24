@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Dimensions } from 'react-native';
 import MapView, { Circle } from 'react-native-maps';
 import { getDistance } from 'geolib';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import firestore from '@react-native-firebase/firestore';
 
 const RADIUS_METERS = 14;
 
@@ -52,41 +52,41 @@ const MapScreen = () => {
   const [clusters, setClusters] = useState<{ lat: number; lon: number; avg: number }[]>([]);
 
   useEffect(() => {
-    const loadData = async () => {
-      const allKeys = await AsyncStorage.getAllKeys();
-      const dataKeys = allKeys.filter(key => key.startsWith("bleData-"));
-      let points: { lat: number; lon: number; value: number }[] = [];
+    const loadFirestoreData = async () => {
+      try {
+        const snapshot = await firestore().collection('publicSessions').get();
+        let points: { lat: number; lon: number; value: number }[] = [];
 
-      for (const key of dataKeys) {
-        const raw = await AsyncStorage.getItem(key);
-        if (!raw) continue;
-        try {
-          const rows = JSON.parse(raw);
+        snapshot.forEach(doc => {
+          console.log("Fetched session from Firebase:", doc.id, doc.data());
+          const session = doc.data();
+          const rows = session.data || [];
           for (const row of rows) {
-            const lat = parseFloat(row[9]);
-            const lon = parseFloat(row[10]);
-            const pm25 = parseFloat(row[7]); // pm25_env
+            const lat = parseFloat(row.lat);
+            const lon = parseFloat(row.lon);
+            const pm25 = parseFloat(row.pm25_env);
             if (!isNaN(lat) && !isNaN(lon) && !isNaN(pm25)) {
               points.push({ lat, lon, value: pm25 });
             }
           }
-        } catch (e) {
-          console.warn(`Failed to parse data for ${key}`, e);
-        }
-      }
+        });
+        console.log('points: ', points);
 
-      const clustered = calculateAverage(points);
-      setClusters(clustered);
+        const clustered = calculateAverage(points);
+        setClusters(clustered);
+      } catch (e) {
+        console.error("Failed to fetch data from Firestore", e);
+      }
     };
 
-    loadData();
+    loadFirestoreData();
   }, []);
 
   return (
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        initialRegion={{
+        initialRegion={{  // Imperial College London
           latitude: 51.498926,
           longitude: -0.175716,
           latitudeDelta: 0.05,
