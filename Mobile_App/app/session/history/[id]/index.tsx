@@ -142,13 +142,17 @@ const SessionHistoryScreen = () => {
         return;
       }
 
+      const stored = await AsyncStorage.getItem(`lastUpdated-${id}`);
+      const localLastUpdated = stored ? JSON.parse(stored) : {timestamp: null, localTime: null};
+
       await uploadSessionToFirestore(
-        id, 
-        rows, 
+        id,                 // session ID
+        rows,               // session data
         user.uid, 
         expectedKeys,
         sessionName,
-        user.email ?? ''
+        user.email ?? '',
+        localLastUpdated
       );
       console.log('Success, Session data uploaded to the cloud!');
       Alert.alert('Success', 'Session data uploaded to the cloud!');
