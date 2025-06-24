@@ -4,12 +4,16 @@ import { View, SafeAreaView, Text, ScrollView, Dimensions, StyleSheet } from 're
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
 import { useBLEContext } from "@/contexts/BLEContext";
+import firestore from '@react-native-firebase/firestore';
+import { useAuth } from '@/contexts/AuthContext';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 
 const data = () => {
+
+  const { user } = useAuth();
 
   const [selectedPM, setSelectedPM] = useState<'pm1' | 'pm25' | 'pm10'>('pm25');
   const { expectedKeys } = useBLEContext();
@@ -19,11 +23,51 @@ const data = () => {
     datasets: { data: number[]; color: () => string; strokeWidth: number }[];
   } | null>(null);
 
+  const fetchFromFiresbase = async (sessionId: string) => {
+    try {
+      const doc = await firestore()
+        .collection('users')
+        .doc(user?.uid)
+        .collection('sessions')
+        .doc(sessionId)
+        .get();
+
+      if (!doc.exists) {
+        console.warn(`No Firestore session found for ID: ${sessionId}`);
+        return [];
+      }
+
+      const data = doc.data();
+      const firestoreData = data?.data;
+
+      if (!Array.isArray(firestoreData)) return [];
+
+      const rows: string[][] = firestoreData.map((entry: Record<string, any>) =>
+        expectedKeys.map(key => String(entry[key] ?? '')).concat(entry.environment ?? '')
+      );
+
+      console.log(`Loaded ${rows.length} rows from Firestore for session ${sessionId}`);
+      return rows;
+    } catch (err) {
+      console.error('Error loading Firestore session data:', err);
+      return [];
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
         const stored = await AsyncStorage.getItem(`bleData-${id}`);
-        const parsed: string[][] = stored ? JSON.parse(stored) : [];
+        let parsed: string[][] = stored ? JSON.parse(stored) : [];
+
+        if (!parsed || parsed.length === 0) {
+          parsed = await fetchFromFiresbase(id);
+        }
+
+        if (!parsed || parsed.length === 0) {
+          console.warn('No data found locally or in Firestore');
+          return;
+        }
 
         const timeIndex = expectedKeys.indexOf('time');
         const pm1Index = expectedKeys.indexOf('pm1_std');
