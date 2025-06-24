@@ -129,7 +129,7 @@ const App = () => {
  
   return (
     <SafeAreaView style={styles.container}>
-      <Spacer height={20} />
+      <Spacer height={40} />
       <Button title="Back to home" onPress={handleBackToHome} />
       {connectedDevice && (
         <View style={styles.sessionNameContainer}>
@@ -145,12 +145,12 @@ const App = () => {
       <View style={styles.heartRateTitleWrapper}>
         {connectedDevice ? (
           <>
-            <Text style={styles.heartRateTitleText}>Data from Beacon:</Text>
+            <Text style={styles.heartRateTitleText}>Raw Data from ParticuLog:</Text>
             <Text style={styles.heartRateText}>{heartRate}</Text>
           </>
         ) : (
           <Text style={styles.heartRateTitleText}>
-            Please Connect to a Beacon
+            Please Connect to a ParticuLog
           </Text>
         )}
       </View>

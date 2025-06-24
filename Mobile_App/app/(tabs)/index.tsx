@@ -71,37 +71,29 @@ export default function Index() {
 
   return (
     <ThemedView className="flex-1">
-      <Image source={images.bg} className="absolute w-full z-0" />
-      <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false} contentContainerStyle={{minHeight: '100%', paddingBottom: 10 }}>
-        <Image source={icons.logo} className="w-12 h-10 mt-20 mb-5 mx-auto" />
+      <Image source={images.bg} className="absolute w-full z-0 " />
 
+        <Spacer height={300} />
         <ThemedText className='font-bold text-[18px] text-center' title={true}>
-          Dashboard
+          Welcome!
+        </ThemedText>
+        <ThemedText className='font-bold text-[18px] text-center' title={true}>
+          Use the buttons below for quick start.
         </ThemedText>
 
-        <Spacer height={20} />
-        <Link href='/test-bluetooth'>
-          <ThemedText className='text-center'>
-            Bluetooth (testing)
-          </ThemedText>
-        </Link>
+        <ThemedView className="justify-center items-center">
+          <Spacer height={20} />
+          <Button title="Start a Session" onPress={() => router.push('/test-bluetooth')} />
+        </ThemedView>
 
-        <Spacer height={30} />
+        {/* <Spacer height={30} />
         <Button title="Upload Dummy Data" onPress={uploadDummyData} />
 
         <Spacer height={20} />
         <Button title="Fetch Dummy Data" onPress={fetchDummyData} />
 
         <Spacer height={20} />
-        <Button title="View AsyncStorage" onPress={() => router.push('/debug-asyncstorage')} />
-
-        <View className="flex-1 mt-5">
-          <SearchBar 
-            onPress={() => router.push("/session")} // redirect to the `/session` screen
-            placeholder="Search for a session"
-          />
-        </View>
-      </ScrollView>
+        <Button title="View AsyncStorage" onPress={() => router.push('/debug-asyncstorage')} /> */}
     </ThemedView>
   );
 }

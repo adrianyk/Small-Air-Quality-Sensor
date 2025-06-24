@@ -1,4 +1,5 @@
 import { View, useColorScheme } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const ThemedView = ({ className = '', ...props }) => {
     const colorScheme = useColorScheme() // checks the display mode of the phone (light/dark/null)
@@ -6,7 +7,7 @@ const ThemedView = ({ className = '', ...props }) => {
     // console.log("Theme:", colorScheme)
 
     return (
-        <View 
+        <SafeAreaView 
             className={`bg-${theme}-background ${className}`} {...props} 
         />
     )

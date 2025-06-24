@@ -171,7 +171,7 @@ const PastSessionList = () => {
   return (
     <ThemedView className="flex-1 p-4">
       <Spacer height={20} />
-      <Button title="Back to home" onPress={() => router.push('/')} />
+      <Button title="Back to sessions" onPress={() => router.push('/session')} />
       
       <Spacer height={20} />
       <ThemedText className="text-center font-bold text-xl mb-4" title>
