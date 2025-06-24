@@ -9,6 +9,7 @@ import Spacer from '@/components/Spacer';
 import { deleteSession } from '@/utils/storage';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import firestore from '@react-native-firebase/firestore';
 
 type SessionLabels = Record<string, string>;
 
@@ -21,27 +22,49 @@ const PastSessionList = () => {
 
   const fetchSessions = useCallback(async () => {
     try {
-      const storedLabels = await AsyncStorage.getItem('sessionLabels');
-      const storedUserIds = await AsyncStorage.getItem('sessionUserIds');
-
-      if (!storedLabels || !storedUserIds || !user?.uid) {
+      if (!user?.uid) {
         setSessions({});
         return;
       }
 
-      const labels: SessionLabels = JSON.parse(storedLabels);
-      const userIds: Record<string, string> = JSON.parse(storedUserIds);
+      const storedLabels = await AsyncStorage.getItem('sessionLabels');
+      const storedUserIds = await AsyncStorage.getItem('sessionUserIds');
 
-      const filtered: SessionLabels = {};
-      for (const [id, label] of Object.entries(labels)) {
+      const localLabels: SessionLabels = storedLabels ? JSON.parse(storedLabels) : {};
+      const userIds: Record<string, string> = storedUserIds ? JSON.parse(storedUserIds) : {};
+
+      // Filter local sessions by user ID
+      const localFiltered: SessionLabels = {};
+      for (const [id, label] of Object.entries(localLabels)) {
         if (userIds[id] === user.uid) {
-          filtered[id] = label;
+          localFiltered[id] = label;
         }
       }
 
-      setSessions(filtered);
+      // Fetch sessions from Firebase
+      const snapshot = await firestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('sessions')
+        .get();
+
+      const cloudSessions: SessionLabels = {};
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const label = data.label || 'Unnamed Session';
+        cloudSessions[doc.id] = label;
+      });
+
+      // Merge local and cloud sessions (cloud wins if conflict)
+      const mergedSessions: SessionLabels = {
+        ...localFiltered,
+        ...cloudSessions,
+      };
+
+      setSessions(mergedSessions);
     } catch (e) {
       console.error('Failed to load session labels:', e);
+      setSessions({});
     }
   }, [user?.uid]);
 
@@ -121,29 +144,28 @@ const PastSessionList = () => {
     );
   };
 
+  return (
+    <ThemedView className="flex-1 p-4">
+      <Spacer height={20} />
+      <Button title="Back to home" onPress={() => router.push('/')} />
+      
+      <Spacer height={20} />
+      <ThemedText className="text-center font-bold text-xl mb-4" title>
+        All past sessions:
+      </ThemedText>
 
-    return (
-      <ThemedView className="flex-1 p-4">
-        <Spacer height={20} />
-        <Button title="Back to home" onPress={() => router.push('/')} />
-        
-        <Spacer height={20} />
-        <ThemedText className="text-center font-bold text-xl mb-4" title>
-          All past sessions:
-        </ThemedText>
-
-        <FlatList
-          data={Object.entries(sessions)}
-          keyExtractor={([sessionId]) => sessionId}
-          renderItem={renderItem}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          ListEmptyComponent={
-            <ThemedText className="text-center">No sessions found.</ThemedText>
-          }
-        />
-      </ThemedView>
-    );
-  };
+      <FlatList
+        data={Object.entries(sessions)}
+        keyExtractor={([sessionId]) => sessionId}
+        renderItem={renderItem}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListEmptyComponent={
+          <ThemedText className="text-center">No sessions found.</ThemedText>
+        }
+      />
+    </ThemedView>
+  );
+};
 
 export default PastSessionList;
