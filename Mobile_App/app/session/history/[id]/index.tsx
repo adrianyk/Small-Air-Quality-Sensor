@@ -205,26 +205,25 @@ const SessionHistoryScreen = () => {
         </TouchableOpacity>
       </View>
 
-    {rows.length > 0 ? (
+   {rows.length > 0 ? (
       <ScrollView horizontal>
-        <View style={styles.tableContainer}>
+        <View>
           {/* Header */}
-          <View style={styles.tableRow}>
-            {[...expectedKeys, 'Environment'].map((key) => (
-              <View key={key} style={styles.headerCell}>
-                <Text style={styles.headerText}>{key}</Text>
+          <View style={{ flexDirection: 'row' }}>
+            {[...expectedKeys, 'Environment'].map((key, i) => (
+              <View key={i} style={styles.cell}>
+                <Text style={[styles.headerText]}>{key}</Text>
               </View>
             ))}
           </View>
-
-          {/* Rows */}
-          <ScrollView style={styles.tableBody}>
+          <ScrollView>
+            {/* Rows */}
             {rows.map((row, rowIndex) => (
               <TouchableOpacity
                 key={rowIndex}
                 onPress={() => toggleRowSelection(rowIndex)}
                 style={[
-                  styles.tableRow,
+                  { flexDirection: 'row' },
                   selectedRows.has(rowIndex) && styles.selectedRow,
                 ]}
               >
@@ -312,20 +311,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cell: {
-    width: width,
-    flex: 1,
-    padding: 6,
-    alignItems: 'center',
+    width: 120,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
   headerText: {
-    width: cellWidth,
-    color: 'white',
-    fontSize: 12,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   cellText: {
     fontSize: 12,
     color: '#333',
+    textAlign: 'center',
   },
   envInput: {
     width: '100%',
