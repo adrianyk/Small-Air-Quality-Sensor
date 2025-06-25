@@ -14,18 +14,19 @@ const Profile = () => {
         <ThemedView className='flex-1'>
             <Image source={images.bg} className="absolute w-full z-0 " />
 
-            <Spacer height={300} />
-            <ThemedView className="justify-center items-center">
-                <ThemedText className='font-bold text-[18px] text-center' title={false}>
-                    Profile Page
+            <View className="flex-1 justify-center items-center">
+                <ThemedText className='font-bold text-[50px] text-center' title={true}>
+                    Profile
                 </ThemedText>
+                
                 <Pressable
                     onPress={signOut}
                     className="justify-center mt-6 bg-red-500 px-6 py-3 rounded-full"
                 >
                     <Text className="text-center text-white font-semibold">Sign Out</Text>
                 </Pressable>
-            </ThemedView>
+            </View>
+
         </ThemedView>
     )
 }

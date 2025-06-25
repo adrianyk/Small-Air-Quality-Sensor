@@ -1,5 +1,5 @@
 // Home screen
-import { Button, Image, ScrollView, View } from "react-native";
+import { Button, Image, Pressable, ScrollView, View, Text } from "react-native";
 import { Link, useRouter } from "expo-router";
 
 import { images } from "@/constants/images";
@@ -73,18 +73,29 @@ export default function Index() {
     <ThemedView className="flex-1">
       <Image source={images.bg} className="absolute w-full z-0 " />
 
-        <Spacer height={300} />
-        <ThemedText className='font-bold text-[18px] text-center' title={true}>
+      <View className="flex-1 justify-center items-center">
+        <ThemedText className='font-bold text-[50px] text-center' title={true}>
           Welcome!
         </ThemedText>
-        <ThemedText className='font-bold text-[18px] text-center' title={true}>
-          Use the buttons below for quick start.
+        <ThemedText className='font-bold text-[20px] text-center' title={true}>
+          Tap the buttons below to start.
         </ThemedText>
 
-        <ThemedView className="justify-center items-center">
-          <Spacer height={20} />
-          <Button title="Start a Session" onPress={() => router.push('/test-bluetooth')} />
-        </ThemedView>
+        <Spacer height={10} />
+        {/* <Button title="Start a Session" onPress={() => router.push('/test-bluetooth')} /> */}
+        <Pressable
+            onPress={() => router.push('/test-bluetooth')}
+            className="justify-center mt-6 bg-blue-500 px-6 py-3 rounded-full"
+        >
+            <Text className="text-center text-white font-semibold">Start a Session</Text>
+        </Pressable>
+
+        <Pressable
+            onPress={() => router.push('/profile')}
+            className="justify-center mt-6 bg-blue-500 px-6 py-3 rounded-full"
+        >
+            <Text className="text-center text-white font-semibold">Profile</Text>
+        </Pressable>
 
         {/* <Spacer height={30} />
         <Button title="Upload Dummy Data" onPress={uploadDummyData} />
@@ -94,6 +105,8 @@ export default function Index() {
 
         <Spacer height={20} />
         <Button title="View AsyncStorage" onPress={() => router.push('/debug-asyncstorage')} /> */}
+      </View>
+
     </ThemedView>
   );
 }
