@@ -74,7 +74,10 @@ const char* csvKeys[] = {
   "pm1_std", "pm25_std", "pm10_std",
   "pm1_env", "pm25_env", "pm10_env","lat", "lon"
 };
-//gps global variables
+
+const int numKeys = sizeof(csvKeys) / sizeof(csvKeys[0]);
+
+// GPS Globals
 uint32_t gpsTimer = millis();
 int32_t lon = 0;
 int32_t lat = 0;
@@ -87,9 +90,7 @@ Adafruit_GPS GPS(&GPS_Serial);
 #define LED_RED 2
 #define LED_GREEN 4
 
-
-const int numKeys = sizeof(csvKeys) / sizeof(csvKeys[0]);
-
+// BLE Callbacks 
 class MyBLECallbacks : public BLEServerCallbacks, public BLECharacteristicCallbacks {
 public:
   void onConnect(BLEServer* pServer) override {
@@ -136,6 +137,7 @@ public:
 
 SPIClass vspi(VSPI);
 
+// PMS5003 parser. Waits until 32bytes of data are avaliable, then checks for the correct frame headers, 0x42 and 0x4D and reads data.
 bool readPMSData(uint16_t* pm1_std, uint16_t* pm25_std, uint16_t* pm10_std,
                  uint16_t* pm1_env, uint16_t* pm25_env, uint16_t* pm10_env) {
   static uint8_t buffer[32];
@@ -214,7 +216,7 @@ void setup() {
   #endif
 
   #ifdef USE_SDS011
-    sds.begin(&PMserial);  // reuse same serial if using SDS011
+    sds.begin(&PMserial);  
   #endif
 
   if (!sht31.begin(0x44)) {
@@ -223,7 +225,7 @@ void setup() {
   }
 
 
-  // VSPI bus init
+  // VSPI bus initialisation
   vspi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
   if (!SD.begin(SD_CS, vspi, 100000)) { 
     Serial.println("SD Card Mount Failed at 1MHz");
@@ -275,14 +277,15 @@ void setup() {
   pRXCharacteristic->addDescriptor(new BLE2902());
   pRXCharacteristic->setCallbacks(new MyBLECallbacks());
 
-  // Start the service AFTER adding both characteristics
+  
   pService->start();
   BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(true);  // optional, makes discovery more robust
+  pAdvertising->setScanResponse(true);  
   BLEDevice::startAdvertising();
   Serial.println("BLE Server is running...");
 
+ //SD reader setup
   File root = SD.open("/");
   if (root && root.isDirectory()) {
     while (true) {
@@ -300,12 +303,12 @@ void setup() {
           sessionCounter = num;
         }
       }
-      entry.close(); // always close after reading!
+      entry.close(); 
     }
   }
 
-
   Serial.printf("Last session number: %d\n", sessionCounter);
+ 
   // Initialize GPS
   GPS_Serial.begin(9600, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
   GPS.begin(9600);
@@ -324,21 +327,21 @@ void loop() {
 
   String currentLine;
   int currentFieldIndex = 0;
-  
-
-
+ 
+ // Start session
   if (rxValue == "START"){
     digitalWrite(LED_GREEN, LOW);
     delay(100);
     digitalWrite(LED_GREEN, HIGH);
     delay(100);
     digitalWrite(LED_GREEN, LOW);
-    //feed read nmea for a second
+    // Feed read nmea for 10 seconds
     for (int i=0; i<196; i++){
       readGPSData();
       delay(50);
     }
-    
+
+    // If session has not started yet, create a new session file on the SD card and set hasstarted to true
     if (!hasStarted) {
         digitalWrite(LED_GREEN, HIGH);
         readingIndex = 0;
@@ -363,7 +366,8 @@ void loop() {
         }
 
       }
-    //temp + humidity
+
+      // Start recording and uploading to the new Session file on the sd card
       if (!isnan(temp) && !isnan(humidity)) {
       Serial.printf("Temp: %.1f C, Hum: %.1f %%\n", temp, humidity);
       unsigned long currentTimestamp = startTimestamp + readingIndex;
@@ -431,6 +435,8 @@ void loop() {
     //delay(1000);
   }
 
+  //Stop session
+  //If stop signal has been recieved and a file is not currently being sent, read abnd send the current session File from the SD card
   else if (rxValue == "STOP" && !isSendingFile) {
     if (currentSessionFile != "") {
       csvFile = SD.open(currentSessionFile, FILE_READ);
