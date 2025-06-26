@@ -1,10 +1,10 @@
-import { Button, Image, Pressable, ScrollView, Text, View } from "react-native";
-import { Link, useRouter } from "expo-router";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import ThemedView from "@/components/ThemedView";
 import ThemedText from "@/components/ThemedText";
+
 import { images } from "@/constants/images";
-import Spacer from "@/components/Spacer";
 
 const Session = () => {
     const router = useRouter();
@@ -18,8 +18,6 @@ const Session = () => {
                     Sessions
                 </ThemedText>
 
-                {/* <Spacer height={20} /> */}
-                {/* <Button title="Session History" onPress={() => router.push('/session/history/list')} /> */}
                 <Pressable
                     onPress={() => router.push('/session/history/list')}
                     className="justify-center mt-6 bg-blue-500 px-6 py-3 rounded-full"
@@ -27,8 +25,6 @@ const Session = () => {
                     <Text className="text-center text-white font-semibold">Session History</Text>
                 </Pressable>
 
-                {/* <Spacer height={20} /> */}
-                {/* <Button title="Map" onPress={() => router.push('/session/map')} /> */}
                 <Pressable
                     onPress={() => router.push('/session/map')}
                     className="justify-center mt-6 bg-blue-500 px-6 py-3 rounded-full"

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View, Dimensions } from 'react-native';
 import MapView, { Circle } from 'react-native-maps';
 import { getDistance } from 'geolib';
@@ -47,7 +47,6 @@ const calculateAverage = (points: { lat: number, lon: number, value: number }[])
   return clusters;
 };
 
-
 const MapScreen = () => {
   const [clusters, setClusters] = useState<{ lat: number; lon: number; avg: number }[]>([]);
 
@@ -83,7 +82,7 @@ const MapScreen = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View className='flex-1'>
       <MapView
         style={styles.map}
         initialRegion={{  // Imperial College London
@@ -123,9 +122,6 @@ const MapScreen = () => {
 export default MapScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   map: {
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,

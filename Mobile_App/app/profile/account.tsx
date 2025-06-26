@@ -5,7 +5,7 @@ const Account = () => {
   return (
     <ThemedView className='flex-1 justify-center item-center'>
         <ThemedText className='font-bold text-[18px] text-center' title={true}>
-            Account details
+            Account details (unused screen)
         </ThemedText>
     </ThemedView>
   )

@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Button } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Spacer from '@/components/Spacer';
-import { useBLEContext } from "@/contexts/BLEContext";
 import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import Spacer from '@/components/Spacer';
+
+import { useBLEContext } from "@/contexts/BLEContext";
 
 export default function DebugAsyncStorageScreen() {
   const { connectedDevice } = useBLEContext();
@@ -24,7 +26,7 @@ export default function DebugAsyncStorageScreen() {
   const exportCSV = () => {
     const csv = data.map(item => `"${item.key}","${item.value}"`).join('\n');
     console.log(csv);
-    // You could write this to a file with expo-file-system or share it with expo-sharing
+    // you can write this to a file with expo-file-system or share it with expo-sharing
   };
 
   const handleBackToHome = () => {

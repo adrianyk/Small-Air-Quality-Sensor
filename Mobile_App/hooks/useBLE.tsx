@@ -3,18 +3,17 @@ console.log("useBLE hook mounted");
 
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { Alert, PermissionsAndroid, Platform } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Buffer } from "buffer";
+import * as ExpoDevice from "expo-device";
 import {
   BleError,
   BleManager,
   Characteristic,
   Device,
 } from "react-native-ble-plx";
-import Toast from 'react-native-toast-message';
-import { Buffer } from "buffer";
-import * as ExpoDevice from "expo-device";
-
 import base64 from "react-native-base64";
+import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 // Make sure these are consistent with the ESP32 code
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";

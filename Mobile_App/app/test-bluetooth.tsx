@@ -1,25 +1,27 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  FlatList,
   ScrollView,
   Dimensions,
-  Alert,
   TextInput,
   Button,
   ActivityIndicator
 } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import DeviceModal from "@/components/DeviceConnectionModal";
-import { useBLEContext } from "@/contexts/BLEContext";
-import expectedKeys from "@/hooks/useBLE";
 import { router } from "expo-router";
-import Spacer from "@/components/Spacer";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import expectedKeys from "@/hooks/useBLE";
+
+import { useBLEContext } from "@/contexts/BLEContext";
 import { useAuth } from '@/contexts/AuthContext';
+
+import Spacer from "@/components/Spacer";
+import DeviceModal from "@/components/DeviceConnectionModal";
+import ThemedView from "@/components/ThemedView";
+import ThemedText from "@/components/ThemedText";
 
 const App = () => {
   const {
@@ -69,23 +71,6 @@ const App = () => {
     scanForDevices();
     setIsModalVisible(true);
   };
-
-  <View style={{ flex: 2, paddingHorizontal: 20, marginTop: 10 }}>
-
-  {rows.length > 0 ? (
-    <FlatList
-      data={rows}
-      keyExtractor={(_, index) => index.toString()}
-      renderItem={({ item }) => (
-        <Text style={{ paddingVertical: 4, color: "#333" }}>
-          {item.join(", ")}
-        </Text>
-      )}
-    />
-    ) : (
-      <Text>No recorded data yet.</Text>
-    )}
-  </View>
   
   // Recording button creates a new session and assigns an ID based on the current UNIX time, 
   // also toggles between the "START" and "STOP" signals 
@@ -130,54 +115,54 @@ const App = () => {
   };
  
   return (
-    <SafeAreaView style={styles.container}>
+    <ThemedView className="flex-1">
       <Spacer height={40} />
       <Button title="Back to home" onPress={handleBackToHome} />
       {connectedDevice && (
-        <View style={styles.sessionNameContainer}>
-          <Text style={styles.sessionNameLabel}>Session Name:</Text>
+        <View className="px-5 mt-2.5">
+          <ThemedText className="font-bold mb-1.5 text-[18px]">Session Name:</ThemedText>
           <TextInput
             placeholder="Enter session name"
             value={sessionLabel}
             onChangeText={setSessionLabel}
-            style={styles.sessionNameInput}
+            className="border border-[#ccc] rounded p-2.5 bg-white"
           />
         </View>
       )}
-      <View style={styles.heartRateTitleWrapper}>
+      <View className="py-6 items-center">
         {connectedDevice ? (
           <>
-            <Text style={styles.heartRateTitleText}>Raw Data from ParticuLog:</Text>
-            <Text style={styles.heartRateText}>{heartRate}</Text>
+            <ThemedText className="text-[30px] font-bold text-center mx-5" title={true}>Raw Data from ParticuLog:</ThemedText>
+            <ThemedText className="text-[25px] mt-4">{heartRate}</ThemedText>
           </>
         ) : (
-          <Text style={styles.heartRateTitleText}>
+          <ThemedText className="text-[30px] font-bold text-center mx-5" title={true}>
             Please Connect to a ParticuLog
-          </Text>
+          </ThemedText>
         )}
       </View>
       
-      <View style={styles.dataContainer}>
-        <Text style={styles.sectionTitle}>Recorded BLE Data:</Text>
+      <View className="flex-1 px-2.5 mt-2.5">
+        <ThemedText className="font-bold text-[18px] mb-2.5 text-center" title={true}>Recorded BLE Data:</ThemedText>
         {rows.length > 0 ? (
           <ScrollView horizontal>
-            <View style={styles.tableContainer}>
+            <View className="flex-1 border border-[#ddd] rounded overflow-hidden">
               {/* Header */}
-              <View style={styles.tableRow}>
+              <View className="flex-row border-b border-[#eee]">
                 {expectedKeys.map((key) => (
-                  <View key={key} style={styles.headerCell}>
-                    <Text style={styles.headerText}>{key}</Text>
+                  <View key={key} className="w-[80px] p-1.5 bg-[#4CAF50] items-center">
+                    <ThemedText className="font-bold text-white text-xs">{key}</ThemedText>
                   </View>
                 ))}
               </View>
 
               {/* Rows */}
-              <ScrollView style={styles.tableBody}>
+              <ScrollView className="flex-1">
                 {rows.map((row, rowIndex) => (
-                  <View key={rowIndex} style={styles.tableRow}>
+                  <View key={rowIndex} className="flex-row border-b border-[#eee]">
                     {row.map((cell, cellIndex) => (
-                      <View key={cellIndex} style={styles.cell}>
-                        <Text style={styles.cellText}>{cell}</Text>
+                      <View key={cellIndex} className="w-[80px] p-1.5 items-center">
+                        <ThemedText className="text-xs text-[#333]">{cell}</ThemedText>
                       </View>
                     ))}
                   </View>
@@ -186,11 +171,11 @@ const App = () => {
             </View>
           </ScrollView>
         ) : (
-          <Text style={styles.noDataText}>No recorded data yet.</Text>
+          <ThemedText className="italic text-center mt-5">No recorded data yet.</ThemedText>
         )}
       </View>
 
-      <View style={styles.buttonContainer}>
+      <View className="px-5 mb-5">
         <TouchableOpacity
           onPress={connectedDevice ? disconnectFromDevice : openModal}
           disabled={isTransitioning}
@@ -199,7 +184,7 @@ const App = () => {
             isTransitioning && { opacity: 0.5 }
           ]}
         >
-          <Text style={styles.ctaButtonText}>
+          <Text className="text-[18px] font-bold text-white">
             {connectedDevice ? "Disconnect" : "Connect"}
           </Text>
         </TouchableOpacity>
@@ -217,7 +202,7 @@ const App = () => {
             {isTransitioning ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.ctaButtonText}>
+              <Text className="text-[18px] font-bold text-white">
                 {isRecording ? "Stop Recording" : "Start Recording"}
               </Text>
             )}
@@ -232,7 +217,7 @@ const App = () => {
         devices={allDevices}
         refreshDevices={scanForPeripherals}
       />
-    </SafeAreaView>
+    </ThemedView>
   );
 };
 
@@ -240,87 +225,6 @@ const windowWidth = Dimensions.get('window').width;
 const cellWidth = windowWidth / expectedKeys.length; // Adjust based on number of columns
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f2f2f2",
-  },
-  heartRateTitleWrapper: {
-    paddingVertical: 20,
-    alignItems: "center",
-  },
-  heartRateTitleText: {
-    fontSize: 30,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginHorizontal: 20,
-    color: "black",
-  },
-  heartRateText: {
-    fontSize: 25,
-    marginTop: 15,
-  },
-  dataContainer: {
-    flex: 1,
-    paddingHorizontal: 10,
-    marginTop: 10,
-  },
-  sectionTitle: {
-    fontWeight: "bold",
-    fontSize: 18,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  tableContainer: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    overflow: 'hidden',
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#f5f5f5',
-  },
-  tableBody: {
-    flex: 1,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  tableHeaderCell: {
-    width: cellWidth,
-    padding: 8,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tableCell: {
-    width: cellWidth,
-    padding: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerText: {
-    fontWeight: 'bold',
-    color: 'white',
-    fontSize: 12,
-  },
-  cellText: {
-    fontSize: 12,
-    color: '#333',
-  },
-  noDataText: {
-    color: '#666',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  buttonContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
   ctaButton: {
     backgroundColor: "#FF6060",
     justifyContent: "center",
@@ -328,47 +232,7 @@ const styles = StyleSheet.create({
     height: 50,
     marginBottom: 10,
     borderRadius: 8,
-  },
-  ctaButtonText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "white",
-  },
-  
-  sessionNameContainer: {
-  paddingHorizontal: 20,
-  marginTop: 10,
-  },
-  sessionNameLabel: {
-    fontWeight: 'bold',
-    marginBottom: 5,
-    fontSize: 16,
-  },
-  sessionNameInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    backgroundColor: 'white',
-  },
-
-  bottomButtons: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-  },
-  headerCell: {
-    width: 80,
-    padding: 6,
-    backgroundColor: '#4CAF50',
-    alignItems: 'center',
-  },
-  cell: {
-    width: 80,
-    padding: 6,
-    alignItems: 'center',
-  },
+  }
 });
 
 export default App;

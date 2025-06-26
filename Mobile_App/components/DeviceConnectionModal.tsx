@@ -1,15 +1,18 @@
-import React, { FC, useCallback } from "react";
+import { FC, useCallback } from "react";
 import {
   FlatList,
   ListRenderItemInfo,
   Modal,
-  SafeAreaView,
   Text,
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
 import { Device } from "react-native-ble-plx";
 import { Feather } from '@expo/vector-icons';
+
+import ThemedView from "@/components/ThemedView";
+import ThemedText from "@/components/ThemedText";
+import Spacer from "@/components/Spacer";
 
 type DeviceModalListItemProps = {
   item: ListRenderItemInfo<Device>;
@@ -36,9 +39,9 @@ const DeviceModalListItem: FC<DeviceModalListItemProps> = (props) => {
   return (
     <TouchableOpacity
       onPress={connectAndCloseModal}
-      style={modalStyle.ctaButton}
+      className="bg-[#FF6060] justify-center items-center h-12 mx-5 mb-1 rounded-md"
     >
-      <Text style={modalStyle.ctaButtonText}>{item.item.name}</Text>
+      <Text className="text-lg font-bold text-white">{item.item.name}</Text>
     </TouchableOpacity>
   );
 };
@@ -61,25 +64,26 @@ const DeviceModal: FC<DeviceModalProps> = (props) => {
 
   return (
     <Modal
-      style={modalStyle.modalContainer}
+      className="flex-1 bg-[#f2f2f2]"
       animationType="slide"
       transparent={false}
       visible={visible}
     >
-      <SafeAreaView style={modalStyle.modalTitle}>
+      <ThemedView className="flex-1">
         <TouchableOpacity onPress={closeModal} style={modalStyle.backButton}>
           <Feather name="arrow-left" size={24} color="#007AFF" />
         </TouchableOpacity>
 
-        <Text style={modalStyle.modalTitleText}>
+        <ThemedText className="mt-10 text-[30px] font-bold mx-5 text-center">
           Tap on a device to connect
-        </Text>
+        </ThemedText>
 
+        <Spacer height={20} />
         <TouchableOpacity
           style={modalStyle.ctaButton}
           onPress={props.refreshDevices}
         >
-          <Text style={modalStyle.ctaButtonText}>Refresh</Text>
+          <Text className="text-lg font-bold text-white">Refresh</Text>
         </TouchableOpacity>
         
         <FlatList
@@ -87,38 +91,15 @@ const DeviceModal: FC<DeviceModalProps> = (props) => {
           data={devices}
           renderItem={renderDeviceModalListItem}
         />
-      </SafeAreaView>
+      </ThemedView>
     </Modal>
   );
 };
 
 const modalStyle = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "#f2f2f2",
-  },
   modalFlatlistContiner: {
     flex: 1,
     justifyContent: "center",
-  },
-  modalCellOutline: {
-    borderWidth: 1,
-    borderColor: "black",
-    alignItems: "center",
-    marginHorizontal: 20,
-    paddingVertical: 15,
-    borderRadius: 8,
-  },
-  modalTitle: {
-    flex: 1,
-    backgroundColor: "#f2f2f2",
-  },
-  modalTitleText: {
-    marginTop: 40,
-    fontSize: 30,
-    fontWeight: "bold",
-    marginHorizontal: 20,
-    textAlign: "center",
   },
   ctaButton: {
     backgroundColor: "#FF6060",
@@ -129,21 +110,12 @@ const modalStyle = StyleSheet.create({
     marginBottom: 5,
     borderRadius: 8,
   },
-  ctaButtonText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "white",
-  },
   backButton: {
     alignSelf: "flex-start",
     marginLeft: 16,
     marginBottom: 12,
     padding: 8,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: "#007AFF",
-  },
+  }
 });
 
 export default DeviceModal;

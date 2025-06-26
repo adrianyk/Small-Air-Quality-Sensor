@@ -1,17 +1,16 @@
 // Home screen
-import { Button, Image, Pressable, ScrollView, View, Text } from "react-native";
-import { Link, useRouter } from "expo-router";
+import { Image, Pressable, View, Text } from "react-native";
+import { useRouter } from "expo-router";
+
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 import { images } from "@/constants/images";
-import { icons } from "@/constants/icons";
 
-import SearchBar from "@/components/SearchBar";
 import ThemedView from "@/components/ThemedView";
 import ThemedText from "@/components/ThemedText";
 import Spacer from "@/components/Spacer";
 
-import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
 
 export default function Index() {
   const router = useRouter();
@@ -82,7 +81,6 @@ export default function Index() {
         </ThemedText>
 
         <Spacer height={10} />
-        {/* <Button title="Start a Session" onPress={() => router.push('/test-bluetooth')} /> */}
         <Pressable
             onPress={() => router.push('/test-bluetooth')}
             className="justify-center mt-6 bg-blue-500 px-6 py-3 rounded-full"

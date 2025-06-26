@@ -11,17 +11,22 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import expectedKeys from '@/hooks/useBLE';
-import { useNetworkStatus } from '@/hooks/useNetworkStatus';
-import { useBLEContext } from "@/contexts/BLEContext";
-import { useAuth } from '@/contexts/AuthContext';
-import { uploadSessionToFirestore } from '@/utils/uploadSessionToFirestore';
-import Spacer from '@/components/Spacer';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import firestore from '@react-native-firebase/firestore';
 
+import expectedKeys from '@/hooks/useBLE';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+
+import { useBLEContext } from "@/contexts/BLEContext";
+import { useAuth } from '@/contexts/AuthContext';
+
+import Spacer from '@/components/Spacer';
+
+import { uploadSessionToFirestore } from '@/utils/uploadSessionToFirestore';
+import ThemedView from '@/components/ThemedView';
+import ThemedText from '@/components/ThemedText';
 
 const cellWidth = Dimensions.get('window').width / (expectedKeys.length + 1); // +1 for environment
 const width = 80;
@@ -119,7 +124,6 @@ const SessionHistoryScreen = () => {
       console.error('Failed to load session from cloud:', e);
     }
   };
-
 
   const updateEnvironment = async (rowIndex: number, value: string) => {
     const updatedRows = [...rows];
@@ -222,9 +226,11 @@ const SessionHistoryScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Session: {sessionName}</Text>
-      <Text className='text-center'>Session ID: {id}</Text>
+    <ThemedView className="flex-1 p-3">
+      <ThemedText className="text-[18px] font-bold mb-4 text-center" title={true}>
+        Session: {sessionName}
+      </ThemedText>
+      <ThemedText className='text-center'>Session ID: {id}</ThemedText>
 
       <Spacer height={20} />
       {!isOnline && (
@@ -246,7 +252,7 @@ const SessionHistoryScreen = () => {
         {isUploading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.uploadButtonText}>Upload to Cloud</Text>
+          <Text className="text-white font-bold">Upload to Cloud</Text>
         )}
       </TouchableOpacity>
       <Spacer height={20} />
@@ -254,7 +260,7 @@ const SessionHistoryScreen = () => {
       {/* Bulk input UI */}
       <View style={styles.bulkUpdateContainer}>
         <TextInput
-          style={styles.bulkInput}
+          className="flex-1 border border-[#ccc] rounded px-2 py-1 text-[12px]"
           placeholder="Set environment for selected rows"
           value={bulkEnvInput}
           onChangeText={setBulkEnvInput}
@@ -271,7 +277,7 @@ const SessionHistoryScreen = () => {
           <View style={{ flexDirection: 'row' }}>
             {[...expectedKeys, 'Environment'].map((key, i) => (
               <View key={i} style={styles.cell}>
-                <Text style={[styles.headerText]}>{key}</Text>
+                <ThemedText className="font-bold text-center" title={true}>{key}</ThemedText>
               </View>
             ))}
           </View>
@@ -288,7 +294,7 @@ const SessionHistoryScreen = () => {
               >
                 {row.slice(0, expectedKeys.length).map((cell, colIndex) => (
                   <View key={colIndex} style={styles.cell}>
-                    <Text style={styles.cellText}>{cell}</Text>
+                    <ThemedText className="text-xs text-center">{cell}</ThemedText>
                   </View>
                 ))}
                 <View style={styles.cell}>
@@ -307,38 +313,18 @@ const SessionHistoryScreen = () => {
     ) : (
       <Text style={styles.noData}>No data found for this session.</Text>
     )}
-    </SafeAreaView>
+    </ThemedView>
   );
 };
 
 export default SessionHistoryScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: '#f8f8f8',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
   bulkUpdateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginBottom: 12,
-  },
-  bulkInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    fontSize: 12,
   },
   bulkApply: {
     color: '#007AFF',
@@ -346,43 +332,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     paddingHorizontal: 10,
   },
-  tableContainer: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-  },
-  tableBody: {
-    flex: 1,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderColor: '#eee',
-  },
   selectedRow: {
     backgroundColor: '#e0f7fa',
-  },
-  headerCell: {
-    width: width,
-    padding: 6,
-    backgroundColor: '#4CAF50',
-    alignItems: 'center',
   },
   cell: {
     width: 120,
     padding: 8,
     borderWidth: 1,
     borderColor: '#ccc',
-  },
-  headerText: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  cellText: {
-    fontSize: 12,
-    color: '#333',
-    textAlign: 'center',
   },
   envInput: {
     width: '100%',
@@ -404,9 +361,5 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
-  },
-  uploadButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },  
+  }
 });

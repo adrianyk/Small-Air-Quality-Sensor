@@ -1,4 +1,4 @@
-import { View, useColorScheme } from 'react-native'
+import { useColorScheme } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const ThemedView = ({ className = '', ...props }) => {

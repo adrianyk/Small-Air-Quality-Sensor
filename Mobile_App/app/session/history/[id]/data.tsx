@@ -1,20 +1,19 @@
 import { useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, SafeAreaView, Text, ScrollView, Dimensions, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
-import { useBLEContext } from "@/contexts/BLEContext";
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore';
+
+import { useBLEContext } from "@/contexts/BLEContext";
 import { useAuth } from '@/contexts/AuthContext';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-
 const data = () => {
-
   const { user } = useAuth();
-
   const [selectedPM, setSelectedPM] = useState<'pm1' | 'pm25' | 'pm10'>('pm25');
   const { expectedKeys } = useBLEContext();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -151,22 +150,18 @@ const data = () => {
             </View>
           </View>
 
-
           <View style={styles.buttonGroup}>
             {['pm1', 'pm25', 'pm10'].map((pm) => (
               <Text
                 key={pm}
-
                 onPress={() => setSelectedPM(pm as 'pm1' | 'pm25' | 'pm10')}
                 style={[
                   styles.button,
-
                   selectedPM === pm && styles.buttonSelected,
                 ]}
               >
                 {pm.toUpperCase()}
               </Text>
-
             ))}
           </View>
           {chartData ? (
@@ -203,7 +198,6 @@ const data = () => {
     </SafeAreaView>
   );
 };
-
 
 export default data;
 

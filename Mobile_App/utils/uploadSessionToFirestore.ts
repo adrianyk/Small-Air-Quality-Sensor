@@ -45,12 +45,6 @@ export const uploadSessionToFirestore = async (
 
   await userSessionRef.set(sessionDoc);
   console.log('✅ Uploaded to user session path:', userSessionRef.path)
-  // try {
-  //   await userSessionRef.set(sessionDoc);
-  //   console.log("✅ Uploaded to user session path:", userSessionRef.path);
-  // } catch (err) {
-  //   console.error("❌ Error writing to user session path:", err);
-  // }
 
   // 2. Upload to publicSessions (without/desrtuctured/removed userEmail)
   const { userEmail: _, ...publicSessionDoc } = sessionDoc;
@@ -62,12 +56,6 @@ export const uploadSessionToFirestore = async (
   await publicSessionRef.set(publicSessionDoc);
   console.log('✅ Uploaded to publicSessions:', publicSessionRef.path);
   console.log('📦 Public session data:', publicSessionDoc);
-  // try {
-  //   await publicSessionRef.set(publicSessionDoc);
-  //   console.log("✅ Uploaded to publicSessions:", publicSessionRef.path);
-  // } catch (err) {
-  //   console.error("❌ Error writing to publicSessions:", err);
-  // }
 
   console.log("🏁 uploadSessionToFirestore finished");
 };
