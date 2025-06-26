@@ -87,6 +87,8 @@ const App = () => {
     )}
   </View>
   
+  // Recording button creates a new session and assigns an ID based on the current UNIX time, 
+  // also toggles between the "START" and "STOP" signals 
   const toggleRecording = async () => {
     if (isTransitioning) return;
 
