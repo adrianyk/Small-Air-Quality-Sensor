@@ -25,11 +25,9 @@
 #define CHARACTERISTIC_UUID_SESSION_STATE "1b76c3ce-d232-4796-9d85-cf1a68ecff05"
 #define CHARACTERISTIC_UUID_TIMESTAMP     "a66324f1-8fc4-44a6-9be5-a481922ef754"
 
-
 // Timestamp globals
 unsigned long startTimestamp = 0; 
 unsigned long readingIndex = 0;   
-
 
 // SD Card (VSPI default pins)
 #define SD_CS    15
@@ -200,8 +198,6 @@ void readGPSData() {
   }
 }
 
-
-
 void setup() {
   Serial.begin(115200);
   Wire.begin();
@@ -223,7 +219,6 @@ void setup() {
     Serial.println("Could not find SHT31 sensor!");
     while (1) delay(1);
   }
-
 
   // VSPI bus initialisation
   vspi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
@@ -276,7 +271,6 @@ void setup() {
 
   pRXCharacteristic->addDescriptor(new BLE2902());
   pRXCharacteristic->setCallbacks(new MyBLECallbacks());
-
   
   pService->start();
   BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
@@ -364,7 +358,6 @@ void loop() {
           pSessionStateCharacteristic->setValue("BUSY");
           pSessionStateCharacteristic->notify();
         }
-
       }
 
       // Start recording and uploading to the new Session file on the sd card
@@ -375,7 +368,6 @@ void loop() {
     } else {
       logEntry += "NA,NA";
     }
-      
 
   #ifdef USE_PMS5003
     uint16_t pm1_std, pm25_std, pm10_std, pm1_env, pm25_env, pm10_env;
@@ -409,7 +401,6 @@ void loop() {
             lon=0;
           lat=0;
           gpsCount=0;
-            
         }
         else{
             Serial.println("gps count is >0");
@@ -419,7 +410,6 @@ void loop() {
             lat=0;
             gpsCount=0;
         }
-        
     }
     else {
         Serial.println("nan");
@@ -479,10 +469,8 @@ void loop() {
             currentLine = ""; // clear and read next line in next cycle
             return; // wait for next SEND_INTERVAL cycle
           }
-
           currentFieldIndex = 0;
         }
-
 
         if (csvFile.available() || currentLine != "") {
           digitalWrite(LED_GREEN, HIGH);
@@ -517,23 +505,20 @@ void loop() {
               rxValue.clear();
               return;
             }
-          if (!isSendingFile && !hasStarted) {
-            // Notify client that we're IDLE again
-            if (deviceConnected && pSessionStateCharacteristic) {
-              pSessionStateCharacteristic->setValue("IDLE");
-              pSessionStateCharacteristic->notify();
-              Serial.println("Session state set to IDLE.");
+            if (!isSendingFile && !hasStarted) {
+              // Notify client that we're IDLE again
+              if (deviceConnected && pSessionStateCharacteristic) {
+                pSessionStateCharacteristic->setValue("IDLE");
+                pSessionStateCharacteristic->notify();
+                Serial.println("Session state set to IDLE.");
+              }
             }
-          }
-
           }
         } else {
           Serial.println("End of CSV file reached");
           csvFile.close();
-          
         }
-
-      } else{
+      } else {
         Serial.println("Finished sending file.");
         digitalWrite(LED_GREEN, LOW);
         digitalWrite(LED_RED, LOW);
