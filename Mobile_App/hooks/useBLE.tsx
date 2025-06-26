@@ -30,7 +30,7 @@ interface BluetoothLowEnergyApi {
   stopScan: () => void;
   connectedDevice: Device | null;
   allDevices: Device[];
-  heartRate: string;
+  sensorData: string;
   startRecordingData: () => Promise<void>;
   stopRecordingData: () => Promise<void>;
   sessionState: string;
@@ -51,7 +51,7 @@ function useBLE(): BluetoothLowEnergyApi {
   const [sessionId, setSessionId] = useState<string>(() => `session-${Date.now()}`);
   const [allDevices, setAllDevices] = useState<Device[]>([]);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
-  const [heartRate, setHeartRate] = useState("null");
+  const [sensorData, setSensorData] = useState("null");
   const [rows, setRows] = useState<string[][]>([]);
   const [sessionState, setSessionState] = useState<string>("UNKNOWN");
   const [expectedState, setExpectedState] = useState<"BUSY" | "IDLE" | null>(null);
@@ -309,17 +309,17 @@ function useBLE(): BluetoothLowEnergyApi {
       } finally {
         console.log("disconnectFromDevice success: ", connectedDevice)
         setConnectedDevice(null);
-        setHeartRate("null");
+        setSensorData("null");
       }
     }
   };
 
-  const onHeartRateUpdate = (
+  const onSensorDataUpdate = (
     error: BleError | null,
     characteristic: Characteristic | null,
   ) => {
     if (error) {
-      console.log("onHeartRateUpdate: ", error);
+      console.log("onSensorDataUpdate: ", error);
       return -1;
     } else if (!characteristic?.value) {
       console.log("No Data was recieved");
@@ -327,7 +327,7 @@ function useBLE(): BluetoothLowEnergyApi {
     }
 
     const rawData = base64.decode(characteristic.value);
-    setHeartRate(rawData);
+    setSensorData(rawData);
     handleBLEField(rawData);
   };
 
@@ -336,7 +336,7 @@ function useBLE(): BluetoothLowEnergyApi {
       device.monitorCharacteristicForService(
         SERVICE_UUID,
         CHARACTERISTC_DATA_UUID,
-        onHeartRateUpdate
+        onSensorDataUpdate
       );
     } else {
       console.log("No Device Connected");
@@ -457,7 +457,7 @@ function useBLE(): BluetoothLowEnergyApi {
   return {
     allDevices,
     connectedDevice,
-    heartRate,
+    sensorData: sensorData,
     sessionState,
     rows,
     scanForPeripherals,

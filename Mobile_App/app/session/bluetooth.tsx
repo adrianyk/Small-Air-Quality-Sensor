@@ -30,17 +30,13 @@ const App = () => {
     allDevices,
     connectToDevice,
     connectedDevice,
-    heartRate,
+    sensorData,
     disconnectFromDevice,
     stopScan,
     startRecordingData,
     stopRecordingData, 
     sessionState,
     rows,
-    // handleBLEField,
-    loadSavedData,
-    clearSavedData,
-    registerSession,
     expectedKeys,
     sessionId, 
     setSessionId,
@@ -133,7 +129,7 @@ const App = () => {
         {connectedDevice ? (
           <>
             <ThemedText className="text-[30px] font-bold text-center mx-5" title={true}>Raw Data from ParticuLog:</ThemedText>
-            <ThemedText className="text-[25px] mt-4">{heartRate}</ThemedText>
+            <ThemedText className="text-[25px] mt-4">{sensorData}</ThemedText>
           </>
         ) : (
           <ThemedText className="text-[30px] font-bold text-center mx-5" title={true}>
