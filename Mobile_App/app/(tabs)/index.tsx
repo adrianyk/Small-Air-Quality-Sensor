@@ -82,7 +82,7 @@ export default function Index() {
 
         <Spacer height={10} />
         <Pressable
-            onPress={() => router.push('/test-bluetooth')}
+            onPress={() => router.push('/session/bluetooth')}
             className="justify-center mt-6 bg-blue-500 px-6 py-3 rounded-full"
         >
             <Text className="text-center text-white font-semibold">Start a Session</Text>
@@ -102,7 +102,7 @@ export default function Index() {
         <Button title="Fetch Dummy Data" onPress={fetchDummyData} />
 
         <Spacer height={20} />
-        <Button title="View AsyncStorage" onPress={() => router.push('/debug-asyncstorage')} /> */}
+        <Button title="View AsyncStorage" onPress={() => router.push('/misc/debug-asyncstorage')} /> */}
       </View>
 
     </ThemedView>

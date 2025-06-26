@@ -155,7 +155,7 @@ const PastSessionList = () => {
         <TouchableOpacity
           onPress={() =>
             router.push({
-              pathname: "/session/history/[id]/data",
+              pathname: "/session/history/[id]/graph",
               params: { id: sessionId },
             })
           }
