@@ -1,0 +1,12 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : Project [air_quality.PrjPcb]
+   Generated File[air_quality_PCB.TXT]
+   Generated File[air_quality_PCB.LDP]
+   Generated File[air_quality_PCB.DRR]
+
+
+Files Generated   : 3
+Documents Printed : 0
+
+Finished Output Generation At 14:43:50 On 27/06/2025
