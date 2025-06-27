@@ -9,7 +9,7 @@ export const uploadSessionToFirestore = async (
   userEmail: string,
   localLastUpdated: { timestamp: number; localTime: string }
 ) => {
-  console.log("🔥 uploadSessionToFirestore started");
+  console.log("uploadSessionToFirestore started");
   if (!userId) {
     console.error('Upload error: No user ID provided');
     throw new Error('No user ID provided.');
@@ -44,7 +44,7 @@ export const uploadSessionToFirestore = async (
     .doc(sessionId);
 
   await userSessionRef.set(sessionDoc);
-  console.log('✅ Uploaded to user session path:', userSessionRef.path)
+  console.log('Uploaded to user session path:', userSessionRef.path)
 
   // 2. Upload to publicSessions (without/desrtuctured/removed userEmail)
   const { userEmail: _, ...publicSessionDoc } = sessionDoc;
@@ -54,8 +54,8 @@ export const uploadSessionToFirestore = async (
     .doc(sessionId);
 
   await publicSessionRef.set(publicSessionDoc);
-  console.log('✅ Uploaded to publicSessions:', publicSessionRef.path);
-  console.log('📦 Public session data:', publicSessionDoc);
+  console.log('Uploaded to publicSessions:', publicSessionRef.path);
+  console.log('Public session data:', publicSessionDoc);
 
-  console.log("🏁 uploadSessionToFirestore finished");
+  console.log("uploadSessionToFirestore finished");
 };
