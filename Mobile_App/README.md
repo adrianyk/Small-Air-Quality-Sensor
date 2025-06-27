@@ -1,68 +1,17 @@
-# Welcome to your Expo app 👋
+# Get Started with our React Native Expo app!
 
-This is an [Expo](https://expo.dev "https://expo.dev") project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app "https://www.npmjs.com/package/create-expo-app"). This project uses [file-based routing](https://docs.expo.dev/router/introduction "https://docs.expo.dev/router/introduction").
+# About
+This is a React Native [Expo](https://expo.dev "https://expo.dev") project developed for Android devices, and has been "ejected" (`npx expo prebuild`) in order to develop BLE features needed for this app. 
 
-# Get started
-> [!NOTE]  
-> This app is developed for Android devices. 
+# Steps to Follow
 
-## 1. Running the App with Expo Go / Basic Development Setup (Before Prebuild, Android/iOS)
-
-Use this when testing basic app functionality before Bluetooth integration or native modules.
-
-### Follow steps below:
+> [!IMPORTANT]  
+> Requires a physical Android device going forward!
 
 1. First make sure you have Node (`node.js`) installed. Visit their [website](https://nodejs.org/en "https://nodejs.org/en") and download the latest LTS (Long-Term Support) version. Run the installer to install `node.js` onto your laptop. 
 
-   > [!NOTE]  
-   > If you have already installed Node on your system, make sure it is Node 18 or newer.
-
-2. From the `main` branch, create a new git branch (if you haven't already). Make your changes in this branch and _don't push your changes to GitHub yet_ (pls i beg i dun wan any merge conflicts ;-;). 
-
-3. Delete the `node_modules`, `android` and `ios` folders inside `Mobile_App` (if they exist). Then, open a terminal and `cd` into this directory (`Mobile_App`), and run the following command to install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-4. Then run the following command in the directory `Mobile_App` to start the app:
-
-   ```bash
-   npx expo start
-   ```
-
-   > [!NOTE]  
-   > If you run into any errors, try running `npx expo start --clear` instead
-
-5. In the terminal output, you'll see different options to open the app:
-
-   - [development build](https://docs.expo.dev/develop/development-builds/introduction/ "https://docs.expo.dev/develop/development-builds/introduction/")
-   - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/ "https://docs.expo.dev/workflow/android-studio-emulator/")
-   - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/ "https://docs.expo.dev/workflow/ios-simulator/")
-   - [Expo Go](https://expo.dev/go "https://expo.dev/go") <- This is what you want (trust)
-      - What it is: a limited sandbox for trying out app development with Expo
-      - _**Easiest and simplest method**_ to test the app, works on **_both_** Android and Apple devices! (very convenient)
-      - Download the Expo Go app for free from Google Play (Android) or App Store (Apple) and follow the instructions in your terminal. 
-      - [Having problems opening in Expo Go?](https://docs.expo.dev/get-started/start-developing/#having-problems "https://docs.expo.dev/get-started/start-developing/#having-problems")
-
-		> [!IMPORTANT] 
-		> Make sure your phone and laptop are connected to the same network!
-
-6. If you've made changes but the app doesn't refresh on your phone, hit `r` in the terminal on your laptop to reload.
-
-## 2. Running the App in the Bare Workflow (After Prebuild, Android ONLY)
-
-Use this after running npx expo prebuild, when working with Bluetooth or other native modules.
-
-> [!IMPORTANT]  
-> Requires a physical Android device from now on. 
-
-### Follow the steps below:
-
-1. Again, make sure you have Node (`node.js`) installed. See Step 1 [above](#1-running-the-app-with-expo-go--basic-development-setup-before-prebuild).
-
-   > [!NOTE]  
-   > If you have already installed Node on your system, make sure it is Node 18 or newer.
+> [!NOTE]  
+> If you have already installed Node on your system, make sure it is Node 18 or newer.
 
 2. Install the Java SE Development Kit (JDK) from [Oracle](https://www.oracle.com/java/technologies/downloads/#java17-windows "https://www.oracle.com/java/technologies/downloads/#java17-windows") or any other sources, if you haven't already. Then configure the path variable as follows:  
    1. Press **Windows Key**, search for "**Environment Variables**"
@@ -76,60 +25,70 @@ Use this after running npx expo prebuild, when working with Bluetooth or other n
    7. Restart your terminal (or VS Code). Run the command `echo %JAVA_HOME%` in a new terminal and you should see the path to your Java SDK. 
    8. Then try running `java -version` in the terminal and you should see something like `java version "17.0.x"`. 
 
-   > [!NOTE]  
-   > If you already have a JDK on your system, we recommend JDK17. You may encounter problems using higher JDK versions.  
-      
-   > [!NOTE]  
-   > if (errors) {   
-   >   do step 4 under "**System variables**" instead   
-   > }
+> [!NOTE]  
+> If you already have a JDK on your system, we recommend JDK17. You may encounter problems using higher JDK versions.  
+
+> [!NOTE]
+> Troubleshooting:    
+> If your system fails to detect your JDK, repeat Step 4 under "**System variables**" instead.
 
 3. Install Android Studio. Follow the steps listed [here](https://reactnative.dev/docs/set-up-your-environment "https://reactnative.dev/docs/set-up-your-environment") under the section "Android development environment".
 
-4. Switch to the `experiment/app-bluetooth` branch. From here, create a new git branch (if you haven't already). Make your changes in this branch and _don't push your changes to GitHub yet_ (again i beg i dun wan any merge conflicts ;-;). 
-
-5. Open a terminal and `cd` into this directory (`Mobile_App`), and run the following command to install dependencies:
-
+4. Open a terminal and `cd` into this directory (`Mobile_App`), and run the following command to install dependencies:
    ```bash
    npm install
    ```
 
-6. Now, the fun stuff: 
+5. Now, the fun stuff: 
 
-   1. **First time setup (requires USB connection):**
-      - This setup requires a physical **Android device** to be connected to your laptop via USB. Follow **_steps 1 and 2 only_** [here](https://reactnative.dev/docs/running-on-device "https://reactnative.dev/docs/running-on-device") to set up your Android device. 
-      - Then, with your Android device connected to your laptop, in a terminal `cd` into the `Mobile_App` directory and run:
+   A. **First time setup (requires USB connection):**
+      1. This setup requires a **physical Android device** to be connected to your laptop via USB. Follow **_steps 1 and 2 only_** [here](https://reactnative.dev/docs/running-on-device "https://reactnative.dev/docs/running-on-device") to set up your Android device. 
+      2. Then, with your Android device connected to your laptop, in a terminal `cd` into the `Mobile_App` directory and run:
          ```bash
          npx expo run:android
          ```
-      - This should install a custom development client app (custom "Expo Go") on your Android phone (over USB), and will start the app right away. 
-      - You will also see a QR code generated in your terminal, but it does NOT work with Expo Go :( more about this later.
+      3. This should install a _custom development client_ app (you should now see a new app appearing on your phone) on your Android phone, and will start the app shortly. Note that it might take a while (10+ minutes). 
+      4. You will also see a QR code generated in your terminal, more about how to use this later but note that it does NOT work with Expo Go (default app used to test Expo projects, but not used in this project as it doesn't support native modules/packages i.e. BLE).
    
-   2. **Later development (no USB needed anymore):**
-      - If you've done the first time setup before, you should see a new app (custom dev client app) in your phone now. 
-      - In a terminal, in the directory `Mobile_App`, run:
+   B. **Later development (no USB needed anymore):**
+      1. If you've done the first time setup before, you should now see a new app (the _custom dev client_ app) in your phone. 
+      2. In a terminal, in the directory `Mobile_App`, run:
          ```bash
          npx expo start
          ```
-      - This should generate a QR code in your terminal. Open the custom dev client app and use it to scan the QR code or input the dev server URL manually. 
-      - The app should open after loading for a while. 
+      3. This should generate a QR code in your terminal. Open the custom dev client app and use it to scan the QR code, or scan it with your camera app, or input the dev server URL manually.
+      4. The app should open after a while. 
 
-      > [!IMPORTANT] 
-		> Make sure your phone and laptop are connected to the same network!
+> [!IMPORTANT] 
+> Make sure your phone and laptop are connected to the same network!
+
+> [!NOTE] 
+> Troubleshooting: 
+> If you run into any errors, try running `npx expo start --clear` instead. This clears build cache.
+> If you're still having build errors, `cd` into the `Mobile_App` directory try running this series of commands:
+> ```
+> taskkill /F /IM java.exe /T
+> taskkill /F /IM gradle* /T
+> rd /s /q .gradle
+> rd /s /q android\.gradle
+> rd /s /q android\build
+> rd /s /q android\app\build
+> rd /s /q .expo
+> rd /s /q node_modules
+> npm install
+> npx expo prebuild --clean
+> npx expo run:android
+> ```
+> The last command requires a physical Android device connected to your laptop.
 
 7. If you've made changes but the app doesn't refresh on your phone, hit `r` in the terminal on your laptop to reload.
 
+---
 
-## Learn more
+# Further Troubleshooting
 
-To learn more about developing your project with Expo, look at the following resources:
+If you have issues when you're trying to pair with the sensor device but it's not appearing on your screen, try restarting your phone's Bluetooth, and if needed, reset the ESP32. 
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Happy developing!
 
-## Join the community
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
