@@ -27,6 +27,7 @@ import Spacer from '@/components/Spacer';
 import { uploadSessionToFirestore } from '@/utils/uploadSessionToFirestore';
 import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
+import ThemedTextInput from '@/components/ThemedTextInput';
 
 const cellWidth = Dimensions.get('window').width / (expectedKeys.length + 1); // +1 for environment
 const width = 80;
@@ -259,8 +260,8 @@ const SessionHistoryScreen = () => {
 
       {/* Bulk input UI */}
       <View style={styles.bulkUpdateContainer}>
-        <TextInput
-          className="flex-1 border border-[#ccc] rounded px-2 py-1 text-[12px]"
+        <ThemedTextInput
+          className="flex-1 border rounded px-2 py-1 text-[12px]"
           placeholder="Set environment for selected rows"
           value={bulkEnvInput}
           onChangeText={setBulkEnvInput}
@@ -298,8 +299,8 @@ const SessionHistoryScreen = () => {
                   </View>
                 ))}
                 <View style={styles.cell}>
-                  <TextInput
-                    style={styles.envInput}
+                  <ThemedTextInput
+                    className="w-full text-[12px] p-1 border rounded"
                     value={row[expectedKeys.length] || ''}
                     onChangeText={(text) => updateEnvironment(rowIndex, text)}
                     placeholder="Enter note"
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
     width: 120,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#666666',
   },
   envInput: {
     width: '100%',

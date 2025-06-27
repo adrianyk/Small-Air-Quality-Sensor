@@ -8,7 +8,11 @@ module.exports = {
     "text-light-title",
     "text-light-text",
     "bg-dark-background",
-    "bg-light-background"
+    "bg-light-background",
+    "border-dark-border",
+    "border-light-border",
+    "#aaa",
+    "#666",
   ],
   theme: {
     extend: {
@@ -26,15 +30,17 @@ module.exports = {
           iconColor: "#9591a5",
           iconColorFocused: "#fff",
           uiBackground: "#2f2b3d",
+          border: "#444444",
         },
         light: {
-          text: "#625f72",
+          text: "#4b495c",
           title: "#201e2b",
           background: "#e0dfe8",
           navBackground: "#e8e7ef",
           iconColor: "#686477",
           iconColorFocused: "#201e2b",
           uiBackground: "#d6d5e1",
+          border: "#666666",
         }
       }
     },
