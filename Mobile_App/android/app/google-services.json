@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "409659419401",
+    "project_id": "air-quality-a786b",
+    "storage_bucket": "air-quality-a786b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:409659419401:android:5c8c991c84f6686c4241d8",
+        "android_client_info": {
+          "package_name": "com.anonymous.Mobile_App"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWDue14SZO6morJb-ucEmKKK3pb8ksOlA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
