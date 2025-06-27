@@ -23,11 +23,12 @@ import { useBLEContext } from "@/contexts/BLEContext";
 import { useAuth } from '@/contexts/AuthContext';
 
 import Spacer from '@/components/Spacer';
-
-import { uploadSessionToFirestore } from '@/utils/uploadSessionToFirestore';
 import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
 import ThemedTextInput from '@/components/ThemedTextInput';
+import ThemedTouchableOpacity from '@/components/ThemedTouchableOpacity';
+
+import { uploadSessionToFirestore } from '@/utils/uploadSessionToFirestore';
 
 const cellWidth = Dimensions.get('window').width / (expectedKeys.length + 1); // +1 for environment
 const width = 80;
@@ -285,13 +286,11 @@ const SessionHistoryScreen = () => {
           <ScrollView>
             {/* Rows */}
             {rows.map((row, rowIndex) => (
-              <TouchableOpacity
+              <ThemedTouchableOpacity
                 key={rowIndex}
+                selected={selectedRows.has(rowIndex)}
                 onPress={() => toggleRowSelection(rowIndex)}
-                style={[
-                  { flexDirection: 'row' },
-                  selectedRows.has(rowIndex) && styles.selectedRow,
-                ]}
+                style={{ flexDirection: 'row' }}
               >
                 {row.slice(0, expectedKeys.length).map((cell, colIndex) => (
                   <View key={colIndex} style={styles.cell}>
@@ -306,13 +305,13 @@ const SessionHistoryScreen = () => {
                     placeholder="Enter note"
                   />
                 </View>
-              </TouchableOpacity>
+              </ThemedTouchableOpacity>
             ))}
           </ScrollView>
         </View>
       </ScrollView>
     ) : (
-      <Text style={styles.noData}>No data found for this session.</Text>
+      <Text className='mt-5 text-center text-gray-500 italic'>No data found for this session.</Text>
     )}
     </ThemedView>
   );
@@ -333,28 +332,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     paddingHorizontal: 10,
   },
-  selectedRow: {
-    backgroundColor: '#e0f7fa',
-  },
   cell: {
     width: 120,
     padding: 8,
     borderWidth: 1,
     borderColor: '#666666',
-  },
-  envInput: {
-    width: '100%',
-    fontSize: 12,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
-  },
-  noData: {
-    marginTop: 20,
-    textAlign: 'center',
-    color: '#777',
-    fontStyle: 'italic',
   },
   uploadButton: {
     marginTop: 20,
