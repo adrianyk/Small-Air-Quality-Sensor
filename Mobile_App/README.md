@@ -34,12 +34,14 @@ This is a React Native [Expo](https://expo.dev "https://expo.dev") project devel
 
 3. Install Android Studio. Follow the steps listed [here](https://reactnative.dev/docs/set-up-your-environment "https://reactnative.dev/docs/set-up-your-environment") under the section "Android development environment".
 
-4. Open a terminal and `cd` into this directory (`Mobile_App`), and run the following command to install dependencies:
+4. Go to **Google Cloud Console**, create an account, go to **Google Map Platforms** and get a Google Maps API key. Next, find the `AndroidManifest.xml` file under `Mobile_app/android/app/src/main`, and paste your API key in the field `android:value=""` for the entry `android:name="com.google.android.geo.API_KEY"`.
+
+5. Open a terminal and `cd` into this directory (`Mobile_App`), and run the following command to install dependencies:
    ```bash
    npm install
    ```
 
-5. Now, the fun stuff: 
+6. Now, the fun stuff: 
 
    A. **First time setup (requires USB connection):**
       1. This setup requires a **physical Android device** to be connected to your laptop via USB. Follow **_steps 1 and 2 only_** [here](https://reactnative.dev/docs/running-on-device "https://reactnative.dev/docs/running-on-device") to set up your Android device. 
@@ -49,6 +51,7 @@ This is a React Native [Expo](https://expo.dev "https://expo.dev") project devel
          ```
       3. This should install a _custom development client_ app (you should now see a new app appearing on your phone) on your Android phone, and will start the app shortly. Note that it might take a while (10+ minutes). 
       4. You will also see a QR code generated in your terminal, more about how to use this later but note that it does NOT work with Expo Go (default app used to test Expo projects, but not used in this project as it doesn't support native modules/packages i.e. BLE).
+      5. Do this setup everytime you add a new native package/module or modify any configuration in the `android` folder for the (custom dev client) app to register the changes. 
    
    B. **Later development (no USB needed anymore):**
       1. If you've done the first time setup before, you should now see a new app (the _custom dev client_ app) in your phone. 
